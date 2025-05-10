@@ -1,11 +1,221 @@
-<div class="container py-4">
+<div class="offer-form fade-in">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">Offer Form</h2>
-    <a routerLink="/offers" class="btn btn-secondary">Back to Offers</a>
+    <div>
+      <h1 class="mb-1">{{ isEditMode ? 'Edit Offer' : 'Add New Offer' }}</h1>
+      <p class="text-muted">{{ isEditMode ? 'Update existing offer information' : 'Create a new special offer for your products' }}</p>
+    </div>
+    <a [routerLink]="['/offers']" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left me-1"></i> Back to Offers
+    </a>
   </div>
-  
-  <div class="alert alert-info">
-    <h4>Simple Offer Form</h4>
-    <p>This is a simplified version of the offer form component for troubleshooting.</p>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">{{ isEditMode ? 'Loading offer details...' : 'Preparing form...' }}</p>
   </div>
+
+  <form [formGroup]="offerForm" (ngSubmit)="onSubmit()" *ngIf="!loading" class="fade-in">
+    <div class="row">
+      <!-- Left Column: Basic Info -->
+      <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Offer Details</h5>
+          </div>
+          <div class="card-body">
+            <!-- Offer Title -->
+            <div class="mb-4">
+              <label for="title" class="form-label">Offer Title <span class="text-danger">*</span></label>
+              <input 
+                type="text" 
+                id="title" 
+                class="form-control form-control-lg" 
+                formControlName="title" 
+                placeholder="Enter offer title"
+                [ngClass]="{'is-invalid': submitted && f['title'].errors}"
+              >
+              <div *ngIf="submitted && f['title'].errors" class="invalid-feedback">
+                <div *ngIf="f['title'].errors['required']">Offer title is required</div>
+              </div>
+              <small class="form-text text-muted">Create a catchy title for your offer</small>
+            </div>
+            
+            <!-- Description -->
+            <div class="mb-4">
+              <label for="description" class="form-label">Description</label>
+              <textarea 
+                id="description" 
+                class="form-control"
+                formControlName="description" 
+                placeholder="Describe the offer in detail"
+                rows="4"
+              ></textarea>
+              <small class="form-text text-muted">Add details about the offer to inform customers</small>
+            </div>
+            
+            <!-- Product Selection -->
+            <div class="mb-4">
+              <label for="productId" class="form-label">Product <span class="text-danger">*</span></label>
+              <select 
+                id="productId" 
+                class="form-select"
+                formControlName="productId"
+                [ngClass]="{'is-invalid': submitted && f['productId'].errors}"
+              >
+                <option value="">-- Select Product --</option>
+                <option *ngFor="let product of products" [value]="product.id">
+                  {{ product.name }} - ${{ product.price }}
+                </option>
+              </select>
+              <div *ngIf="submitted && f['productId'].errors" class="invalid-feedback">
+                <div *ngIf="f['productId'].errors['required']">Please select a product</div>
+              </div>
+            </div>
+            
+            <!-- Supplier Selection -->
+            <div class="mb-4">
+              <label for="supplierId" class="form-label">Supplier <span class="text-danger">*</span></label>
+              <select 
+                id="supplierId" 
+                class="form-select"
+                formControlName="supplierId"
+                [ngClass]="{'is-invalid': submitted && f['supplierId'].errors}"
+              >
+                <option value="">-- Select Supplier --</option>
+                <option *ngFor="let supplier of suppliers" [value]="supplier.id">
+                  {{ supplier.firstname }} {{ supplier.lastname }}
+                </option>
+              </select>
+              <div *ngIf="submitted && f['supplierId'].errors" class="invalid-feedback">
+                <div *ngIf="f['supplierId'].errors['required']">Please select a supplier</div>
+              </div>
+            </div>
+            
+            <!-- Minimum Quantity -->
+            <div class="mb-4">
+              <label for="minimumQuantity" class="form-label">Minimum Quantity <span class="text-danger">*</span></label>
+              <input 
+                type="number" 
+                id="minimumQuantity" 
+                class="form-control" 
+                formControlName="minimumQuantity" 
+                min="1"
+                [ngClass]="{'is-invalid': submitted && f['minimumQuantity'].errors}"
+              >
+              <div *ngIf="submitted && f['minimumQuantity'].errors" class="invalid-feedback">
+                <div *ngIf="f['minimumQuantity'].errors['required']">Minimum quantity is required</div>
+                <div *ngIf="f['minimumQuantity'].errors['min']">Minimum quantity must be at least 1</div>
+              </div>
+              <small class="form-text text-muted">Minimum quantity required to qualify for this offer</small>
+            </div>
+            
+            <!-- Discount Type and Value -->
+            <div class="row">
+              <div class="col-md-6 mb-4">
+                <label for="discountType" class="form-label">Discount Type <span class="text-danger">*</span></label>
+                <select 
+                  id="discountType" 
+                  class="form-select"
+                  formControlName="discountType"
+                  [ngClass]="{'is-invalid': submitted && f['discountType'].errors}"
+                >
+                  <option *ngFor="let type of discountTypes" [value]="type.value">{{ type.label }}</option>
+                </select>
+                <div *ngIf="submitted && f['discountType'].errors" class="invalid-feedback">
+                  <div *ngIf="f['discountType'].errors['required']">Please select discount type</div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-4">
+                <label for="discountValue" class="form-label">Discount Value <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <input 
+                    type="number" 
+                    id="discountValue" 
+                    class="form-control" 
+                    formControlName="discountValue"
+                    min="0"
+                    step="0.01"
+                    [ngClass]="{'is-invalid': submitted && f['discountValue'].errors}"
+                  >
+                  <span class="input-group-text">{{ f['discountType'].value === 'PERCENTAGE' ? '%' : '$' }}</span>
+                  <div *ngIf="submitted && f['discountValue'].errors" class="invalid-feedback">
+                    <div *ngIf="f['discountValue'].errors['required']">Discount value is required</div>
+                    <div *ngIf="f['discountValue'].errors['min']">Discount value cannot be negative</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column: Settings -->
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Offer Settings</h5>
+          </div>
+          <div class="card-body">
+            <!-- Status -->
+            <div class="mb-4">
+              <label for="status" class="form-label">Status</label>
+              <select 
+                id="status" 
+                class="form-select"
+                formControlName="status"
+              >
+                <option *ngFor="let option of statusOptions" [value]="option.value">{{ option.label }}</option>
+              </select>
+            </div>
+            
+            <!-- Date Range -->
+            <div class="mb-3">
+              <label for="startDate" class="form-label">Start Date <span class="text-danger">*</span></label>
+              <input 
+                type="date" 
+                id="startDate" 
+                class="form-control" 
+                formControlName="startDate"
+                [ngClass]="{'is-invalid': submitted && f['startDate'].errors}"
+              >
+              <div *ngIf="submitted && f['startDate'].errors" class="invalid-feedback">
+                <div *ngIf="f['startDate'].errors['required']">Start date is required</div>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <label for="endDate" class="form-label">End Date <span class="text-danger">*</span></label>
+              <input 
+                type="date" 
+                id="endDate" 
+                class="form-control" 
+                formControlName="endDate"
+                [ngClass]="{'is-invalid': submitted && f['endDate'].errors}"
+              >
+              <div *ngIf="submitted && f['endDate'].errors" class="invalid-feedback">
+                <div *ngIf="f['endDate'].errors['required']">End date is required</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+              <i class="fas {{ isEditMode ? 'fa-save' : 'fa-plus-circle' }} me-1"></i>
+              {{ isEditMode ? 'Update Offer' : 'Create Offer' }}
+            </button>
+            <a [routerLink]="['/offers']" class="btn btn-outline-secondary w-100">
+              <i class="fas fa-times me-1"></i> Cancel
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
 </div>

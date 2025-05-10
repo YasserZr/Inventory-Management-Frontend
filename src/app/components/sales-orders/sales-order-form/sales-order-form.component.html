@@ -1,1 +1,322 @@
-<p>sales-order-form works!</p>
+<div class="sales-order-form fade-in">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mb-1">{{ isEditMode ? 'Edit Sales Order' : 'Create New Sales Order' }}</h1>
+      <p class="text-muted">{{ isEditMode ? 'Update existing order details' : 'Place a new order with supplier' }}</p>
+    </div>
+    <a [routerLink]="['/sales-orders']" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left me-1"></i> Back to Orders
+    </a>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">{{ isEditMode ? 'Loading order details...' : 'Preparing form...' }}</p>
+  </div>
+
+  <form [formGroup]="orderForm" (ngSubmit)="onSubmit()" *ngIf="!loading" class="fade-in">
+    <div class="row">
+      <!-- Left Column: Order Details -->
+      <div class="col-lg-8">
+        <!-- Order Information -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Order Information</h5>
+          </div>
+          <div class="card-body">
+            <!-- Supplier -->
+            <div class="mb-4">
+              <label for="supplierId" class="form-label">Supplier <span class="text-danger">*</span></label>
+              <select 
+                id="supplierId" 
+                class="form-select"
+                formControlName="supplierId"
+                [ngClass]="{'is-invalid': submitted && f['supplierId'].errors}"
+              >
+                <option value="">-- Select Supplier --</option>
+                <option *ngFor="let supplier of suppliers" [value]="supplier.id">
+                  {{ supplier.firstname }} {{ supplier.lastname }}
+                </option>
+              </select>
+              <div *ngIf="submitted && f['supplierId'].errors" class="invalid-feedback">
+                <div *ngIf="f['supplierId'].errors['required']">Please select a supplier</div>
+              </div>
+            </div>
+            
+            <!-- Date Fields -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="orderDate" class="form-label">Order Date <span class="text-danger">*</span></label>
+                <input 
+                  type="date" 
+                  id="orderDate" 
+                  class="form-control" 
+                  formControlName="orderDate"
+                  [ngClass]="{'is-invalid': submitted && f['orderDate'].errors}"
+                >
+                <div *ngIf="submitted && f['orderDate'].errors" class="invalid-feedback">
+                  <div *ngIf="f['orderDate'].errors['required']">Order date is required</div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="deliveryDate" class="form-label">Expected Delivery Date</label>
+                <input 
+                  type="date" 
+                  id="deliveryDate" 
+                  class="form-control" 
+                  formControlName="deliveryDate"
+                >
+              </div>
+            </div>
+            
+            <!-- Status and Payment Fields -->
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="status" class="form-label">Order Status <span class="text-danger">*</span></label>
+                <select 
+                  id="status" 
+                  class="form-select"
+                  formControlName="status"
+                >
+                  <option *ngFor="let option of statusOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="paymentStatus" class="form-label">Payment Status <span class="text-danger">*</span></label>
+                <select 
+                  id="paymentStatus" 
+                  class="form-select"
+                  formControlName="paymentStatus"
+                >
+                  <option *ngFor="let option of paymentStatusOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="paymentMethod" class="form-label">Payment Method <span class="text-danger">*</span></label>
+                <select 
+                  id="paymentMethod" 
+                  class="form-select"
+                  formControlName="paymentMethod"
+                >
+                  <option *ngFor="let option of paymentMethodOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Address Fields -->
+            <div class="mb-3">
+              <label for="shippingAddress" class="form-label">Shipping Address <span class="text-danger">*</span></label>
+              <textarea 
+                id="shippingAddress" 
+                class="form-control" 
+                formControlName="shippingAddress"
+                rows="2"
+                [ngClass]="{'is-invalid': submitted && f['shippingAddress'].errors}"
+              ></textarea>
+              <div *ngIf="submitted && f['shippingAddress'].errors" class="invalid-feedback">
+                <div *ngIf="f['shippingAddress'].errors['required']">Shipping address is required</div>
+              </div>
+            </div>
+            
+            <div class="d-flex align-items-center mb-2">
+              <label for="billingAddress" class="form-label mb-0 me-auto">Billing Address <span class="text-danger">*</span></label>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="copyShippingToBilling()">
+                <i class="fas fa-copy me-1"></i> Copy from Shipping
+              </button>
+            </div>
+            <div class="mb-3">
+              <textarea 
+                id="billingAddress" 
+                class="form-control" 
+                formControlName="billingAddress"
+                rows="2"
+                [ngClass]="{'is-invalid': submitted && f['billingAddress'].errors}"
+              ></textarea>
+              <div *ngIf="submitted && f['billingAddress'].errors" class="invalid-feedback">
+                <div *ngIf="f['billingAddress'].errors['required']">Billing address is required</div>
+              </div>
+            </div>
+            
+            <!-- Notes -->
+            <div class="mb-3">
+              <label for="notes" class="form-label">Order Notes</label>
+              <textarea 
+                id="notes" 
+                class="form-control" 
+                formControlName="notes"
+                rows="2"
+                placeholder="Any special instructions or notes for this order"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Order Items -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Order Items</h5>
+            <button type="button" class="btn btn-sm btn-primary" (click)="addOrderLine()">
+              <i class="fas fa-plus me-1"></i> Add Item
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 40%">Product</th>
+                    <th style="width: 20%">Quantity</th>
+                    <th style="width: 20%">Unit Price</th>
+                    <th style="width: 15%">Total</th>
+                    <th style="width: 5%"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let line of orderLineControls.controls; let i = index" [formGroup]="$any(line)">
+                    <td>
+                      <select 
+                        class="form-select"
+                        formControlName="productId"
+                        [ngClass]="{'is-invalid': submitted && line.get('productId')?.errors}"
+                        (change)="onProductSelected(i, $event)"
+                      >
+                        <option value="">-- Select Product --</option>
+                        <option *ngFor="let product of products" [value]="product.id">
+                          {{ product.name }} (${{ product.price }})
+                        </option>
+                      </select>
+                      <div *ngIf="submitted && line.get('productId')?.errors" class="invalid-feedback">
+                        <div *ngIf="line.get('productId')?.errors?.['required']">Product is required</div>
+                      </div>
+                    </td>
+                    <td>
+                      <input 
+                        type="number" 
+                        class="form-control" 
+                        formControlName="quantity"
+                        min="1"
+                        [ngClass]="{'is-invalid': submitted && line.get('quantity')?.errors}"
+                      >
+                      <div *ngIf="submitted && line.get('quantity')?.errors" class="invalid-feedback">
+                        <div *ngIf="line.get('quantity')?.errors?.['required']">Quantity is required</div>
+                        <div *ngIf="line.get('quantity')?.errors?.['min']">Minimum quantity is 1</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input 
+                          type="number" 
+                          class="form-control" 
+                          formControlName="unitPrice"
+                          min="0"
+                          step="0.01"
+                          [ngClass]="{'is-invalid': submitted && line.get('unitPrice')?.errors}"
+                        >
+                        <div *ngIf="submitted && line.get('unitPrice')?.errors" class="invalid-feedback">
+                          <div *ngIf="line.get('unitPrice')?.errors?.['required']">Price is required</div>
+                          <div *ngIf="line.get('unitPrice')?.errors?.['min']">Price cannot be negative</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      ${{ (line.get('quantity')?.value || 0) * (line.get('unitPrice')?.value || 0) | number:'1.2-2' }}
+                    </td>
+                    <td>
+                      <button 
+                        type="button" 
+                        class="btn btn-sm btn-outline-danger" 
+                        (click)="removeOrderLine(i)"
+                        [disabled]="orderLineControls.length === 1"
+                      >
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot class="table-light">
+                  <tr>
+                    <td colspan="3" class="text-end fw-bold">Order Total:</td>
+                    <td class="fw-bold">${{ calculateTotal() | number:'1.2-2' }}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column: Summary and Actions -->
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Order Summary</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Items:</span>
+              <span>{{ orderLineControls.length }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Total Amount:</span>
+              <span>${{ calculateTotal() | number:'1.2-2' }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Status:</span>
+              <span class="badge rounded-pill" 
+                [ngClass]="{
+                  'bg-warning': f['status'].value === 'PENDING',
+                  'bg-info': f['status'].value === 'PROCESSING',
+                  'bg-primary': f['status'].value === 'SHIPPED',
+                  'bg-success': f['status'].value === 'DELIVERED',
+                  'bg-danger': f['status'].value === 'CANCELLED'
+                }">
+                {{ f['status'].value === 'PENDING' ? 'Pending' : 
+                   f['status'].value === 'PROCESSING' ? 'Processing' :
+                   f['status'].value === 'SHIPPED' ? 'Shipped' :
+                   f['status'].value === 'DELIVERED' ? 'Delivered' :
+                   f['status'].value === 'CANCELLED' ? 'Cancelled' : f['status'].value }}
+              </span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>Payment Status:</span>
+              <span class="badge rounded-pill" 
+                [ngClass]="{
+                  'bg-warning': f['paymentStatus'].value === 'PENDING',
+                  'bg-success': f['paymentStatus'].value === 'PAID',
+                  'bg-info': f['paymentStatus'].value === 'REFUNDED'
+                }">
+                {{ f['paymentStatus'].value === 'PENDING' ? 'Pending' :
+                   f['paymentStatus'].value === 'PAID' ? 'Paid' :
+                   f['paymentStatus'].value === 'REFUNDED' ? 'Refunded' : f['paymentStatus'].value }}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+              <i class="fas {{ isEditMode ? 'fa-save' : 'fa-shopping-cart' }} me-1"></i>
+              {{ isEditMode ? 'Update Order' : 'Place Order' }}
+            </button>
+            <a [routerLink]="['/sales-orders']" class="btn btn-outline-secondary w-100">
+              <i class="fas fa-times me-1"></i> Cancel
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
