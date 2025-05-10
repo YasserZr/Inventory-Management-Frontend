@@ -12,6 +12,7 @@ import { SupplierFormComponent } from './components/suppliers/supplier-form/supp
 import { OfferListComponent } from './components/offers/offer-list/offer-list.component';
 import { OfferDetailComponent } from './components/offers/offer-detail/offer-detail.component';
 import { OfferFormComponent } from './components/offers/offer-form/offer-form.component';
+import { ReportingDashboardComponent } from './components/reporting/reporting-dashboard/reporting-dashboard.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -36,5 +37,7 @@ export const routes: Routes = [
   { path: 'offers/new', component: OfferFormComponent },
   { path: 'offers/:id', component: OfferDetailComponent },
   { path: 'offers/:id/edit', component: OfferFormComponent },
+  // Reporting routes
+  { path: 'reporting', component: ReportingDashboardComponent },
   { path: '**', redirectTo: '/dashboard' } // Redirect any unknown routes to dashboard
 ];
