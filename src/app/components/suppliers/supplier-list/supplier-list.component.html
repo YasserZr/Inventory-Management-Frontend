@@ -1,0 +1,167 @@
+<div class="supplier-list fade-in">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mb-1">Suppliers</h1>
+      <p class="text-muted">Manage your supplier relationships</p>
+    </div>
+    <a routerLink="/suppliers/new" class="btn btn-primary">
+      <i class="fas fa-plus me-2"></i> Add New Supplier
+    </a>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="card mb-4 border-0">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0">
+              <i class="fas fa-search text-muted"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control border-start-0" 
+              placeholder="Search suppliers by name or email..." 
+              [(ngModel)]="searchTerm"
+              (keyup)="applyFilters()"
+            >
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <select class="form-select" [(ngModel)]="qualityFilter" (change)="applyFilters()">
+            <option value="">All Service Quality</option>
+            <option value="EXCELLENT">Excellent</option>
+            <option value="GOOD">Good</option>
+            <option value="AVERAGE">Average</option>
+            <option value="BELOW_AVERAGE">Below Average</option>
+            <option value="POOR">Poor</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supplier List -->
+  <div class="card border-0">
+    <div class="card-body p-0">
+      <!-- Loading Indicator -->
+      <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading suppliers...</p>
+      </div>
+      
+      <!-- Suppliers Table -->
+      <div class="table-responsive" *ngIf="!loading && filteredSuppliers.length > 0">
+        <table class="table supplier-table align-middle table-hover mb-0">
+          <thead>
+            <tr>
+              <th>
+                <div class="form-check">                  <input class="form-check-input" type="checkbox" id="selectAll" 
+                         [checked]="hasSelectedSuppliers() && selectedSuppliers.size === filteredSuppliers.length" 
+                         (change)="toggleSelectAll()">
+                </div>
+              </th>
+              <th>Supplier</th>
+              <th>Contact Information</th>
+              <th>Service Quality</th>
+              <th>Rating</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let supplier of filteredSuppliers">
+              <td>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" 
+                         [id]="'supplier-' + supplier.id"
+                         [checked]="isSupplierSelected(supplier.id)"
+                         (change)="toggleSelectSupplier(supplier.id)">
+                </div>
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="supplier-image me-3">
+                    <div class="image-placeholder">
+                      <i class="fas fa-building"></i>
+                    </div>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">{{ supplier.firstname }} {{ supplier.lastname }}</h6>
+                    <small class="text-muted">ID: {{ supplier.id }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="d-flex flex-column">
+                  <div><i class="fas fa-at me-2 text-muted"></i>{{ supplier.email }}</div>
+                  <div><i class="fas fa-envelope me-2 text-muted"></i>{{ supplier.companyEmail || 'N/A' }}</div>
+                  <div><i class="fas fa-phone me-2 text-muted"></i>{{ supplier.companyContactNumber || 'N/A' }}</div>
+                </div>
+              </td>
+              <td>
+                <span class="badge rounded-pill" [ngClass]="getServiceQualityClass(supplier.serviceQuality)">
+                  {{ supplier.serviceQuality ? (supplierService.getServiceQualityLabel(supplier.serviceQuality)) : 'Not Rated' }}
+                </span>
+              </td>
+              <td>
+                <div class="supplier-rating">
+                  <span *ngFor="let star of getRatingStars(supplier.rating)" class="me-1">
+                    <i class="fas" [ngClass]="{
+                      'fa-star text-warning': star === 'full',
+                      'fa-star-half-alt text-warning': star === 'half',
+                      'fa-star text-muted': star === 'empty'
+                    }"></i>
+                  </span>
+                  <small class="ms-2 text-muted" *ngIf="supplier.rating">{{ supplier.rating }}/5</small>
+                </div>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <a [routerLink]="['/suppliers', supplier.id]" class="btn btn-sm btn-icon btn-outline-info me-1" title="View Details">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a [routerLink]="['/suppliers', supplier.id, 'edit']" class="btn btn-sm btn-icon btn-outline-primary me-1" title="Edit Supplier">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <button class="btn btn-sm btn-icon btn-outline-danger" title="Delete Supplier">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Empty State -->
+      <div *ngIf="!loading && filteredSuppliers.length === 0" class="text-center py-5">
+        <i class="fas fa-users fa-3x text-secondary mb-3"></i>
+        <h5>No suppliers found</h5>
+        <p class="text-muted">Try adjusting your search or filter to find what you're looking for.</p>
+        <button class="btn btn-outline-primary" (click)="resetFilters()">
+          <i class="fas fa-redo me-2"></i> Reset Filters
+        </button>
+      </div>
+    </div>
+    
+    <!-- Pagination and Actions -->
+    <div *ngIf="!loading && filteredSuppliers.length > 0" class="card-footer bg-white border-0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-muted">Showing {{ filteredSuppliers.length }} of {{ suppliers.length }} suppliers</span>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-danger me-2" [disabled]="!hasSelectedSuppliers()" (click)="deleteSelected()">
+            <i class="fas fa-trash me-1"></i> Delete Selected
+          </button>
+          <button class="btn btn-sm btn-secondary">
+            <i class="fas fa-download me-1"></i> Export
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

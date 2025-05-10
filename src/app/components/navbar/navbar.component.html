@@ -1,0 +1,54 @@
+<nav class="navbar navbar-expand-lg shadow-sm">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center" routerLink="/">
+      <i class="fas fa-boxes text-primary me-2"></i>
+      <span class="brand-text">BuyNGo Inventory</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
+            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/products" routerLinkActive="active">
+            <i class="fas fa-box me-1"></i> Products
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/sales-orders" routerLinkActive="active">
+            <i class="fas fa-file-invoice-dollar me-1"></i> Sales Orders
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/suppliers" routerLinkActive="active">
+            <i class="fas fa-truck me-1"></i> Suppliers
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/offers" routerLinkActive="active">
+            <i class="fas fa-tag me-1"></i> Offers
+          </a>
+        </li>
+      </ul>
+      <div class="d-flex align-items-center">
+        <div class="dropdown">
+          <a class="btn btn-outline-primary dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-user-circle me-1"></i> Admin
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i> Profile</a></li>
+            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Settings</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>

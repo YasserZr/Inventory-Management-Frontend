@@ -1,0 +1,171 @@
+<div class="product-form fade-in">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mb-1">{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h1>
+      <p class="text-muted">{{ isEditMode ? 'Update existing product information' : 'Create a new product in your inventory' }}</p>
+    </div>
+    <a [routerLink]="['/products']" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left me-1"></i> Back to Products
+    </a>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">{{ isEditMode ? 'Loading product details...' : 'Preparing form...' }}</p>
+  </div>
+
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" *ngIf="!loading" class="fade-in">
+    <div class="row">
+      <!-- Left Column: Basic Info -->
+      <div class="col-lg-8 mb-4">
+        <div class="card border-0">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Basic Information</h5>
+          </div>
+          <div class="card-body">
+            <!-- Product Name -->
+            <div class="mb-4">
+              <label for="name" class="form-label">Product Name <span class="text-danger">*</span></label>
+              <input 
+                type="text" 
+                id="name" 
+                class="form-control form-control-lg" 
+                formControlName="name" 
+                placeholder="Enter product name"
+                [ngClass]="{'is-invalid': submitted && f['name'].errors}"
+              >
+              <div *ngIf="submitted && f['name'].errors" class="invalid-feedback">
+                <div *ngIf="f['name'].errors['required']">Product name is required</div>
+              </div>
+              <small class="form-text text-muted">Enter a descriptive name for the product</small>
+            </div>
+            
+            <!-- Description -->
+            <div class="mb-4">
+              <label for="description" class="form-label">Description</label>
+              <textarea 
+                id="description" 
+                class="form-control" 
+                formControlName="description" 
+                rows="5"
+                placeholder="Enter detailed product description"
+              ></textarea>
+              <small class="form-text text-muted">Provide a detailed description of the product</small>
+            </div>
+            
+            <!-- Price and Stock Quantity -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="price" class="form-label">Price <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input 
+                    type="number" 
+                    id="price" 
+                    class="form-control" 
+                    formControlName="price"
+                    step="0.01" 
+                    min="0" 
+                    placeholder="0.00"
+                    [ngClass]="{'is-invalid': submitted && f['price'].errors}"
+                  >
+                  <div *ngIf="submitted && f['price'].errors" class="invalid-feedback">
+                    <div *ngIf="f['price'].errors['required']">Price is required</div>
+                    <div *ngIf="f['price'].errors['min']">Price must be greater than or equal to 0</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label for="stockQuantity" class="form-label">Stock Quantity <span class="text-danger">*</span></label>
+                <input 
+                  type="number" 
+                  id="stockQuantity" 
+                  class="form-control" 
+                  formControlName="stockQuantity"
+                  min="0"
+                  placeholder="Enter quantity" 
+                  [ngClass]="{'is-invalid': submitted && f['stockQuantity'].errors}"
+                >
+                <div *ngIf="submitted && f['stockQuantity'].errors" class="invalid-feedback">
+                  <div *ngIf="f['stockQuantity'].errors['required']">Stock quantity is required</div>
+                  <div *ngIf="f['stockQuantity'].errors['min']">Stock quantity cannot be negative</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column: Additional Info & Actions -->
+      <div class="col-lg-4">
+        <!-- Status and Categories Card -->
+        <div class="card border-0 mb-4">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Classification</h5>
+          </div>
+          <div class="card-body">
+            <!-- Status Selection -->
+            <div class="mb-3">
+              <label for="status" class="form-label">Status</label>
+              <select id="status" class="form-select" formControlName="status">
+                <option value="ACTIVE">Active</option>
+                <option value="LOW_STOCK">Low Stock</option>
+                <option value="OUT_OF_STOCK">Out of Stock</option>
+              </select>
+              <small class="form-text text-muted">Current inventory status</small>
+            </div>
+            
+            <!-- Category Selection -->
+            <div class="mb-3">
+              <label for="category" class="form-label">Category</label>
+              <select id="category" class="form-select" formControlName="categoryId">
+                <option [ngValue]="null">-- Select Category --</option>
+                <option *ngFor="let category of categories" [value]="category.categoryId">
+                  {{ category.name }}
+                </option>
+              </select>
+              <small class="form-text text-muted">Group this product by category</small>
+            </div>
+            
+            <!-- Supplier Selection -->
+            <div>
+              <label for="supplier" class="form-label">Supplier</label>
+              <select id="supplier" class="form-select" formControlName="supplierId">
+                <option [ngValue]="null">-- Select Supplier --</option>
+                <option *ngFor="let supplier of suppliers" [value]="supplier.id">
+                  {{ supplier.firstname }} {{ supplier.lastname }}
+                </option>
+              </select>
+              <small class="form-text text-muted">Select product supplier</small>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Form Actions Card -->
+        <div class="card border-0">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Actions</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary btn-lg" [disabled]="submitting">
+                <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                {{ isEditMode ? 'Update Product' : 'Create Product' }}
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="cancel()">
+                Cancel
+              </button>
+            </div>
+            
+            <div *ngIf="submitted && productForm.invalid" class="alert alert-danger mt-3">
+              <i class="fas fa-exclamation-circle me-1"></i> Please fix the errors above before submitting.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

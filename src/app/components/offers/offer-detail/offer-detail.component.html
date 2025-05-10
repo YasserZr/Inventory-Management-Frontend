@@ -1,0 +1,20 @@
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Offer Details</h2>
+    <a routerLink="/offers" class="btn btn-secondary">Back to Offers</a>
+  </div>
+  
+  <div class="alert alert-info">
+    <h4>Simple Offer Detail</h4>
+    <p>This is a simplified version of the offer detail component for troubleshooting.</p>
+    <p>Offer ID: {{ offerId }}</p>
+  </div>
+  
+  <div *ngIf="offer" class="card">
+    <div class="card-body">
+      <h5 class="card-title">{{ offer.title }}</h5>
+      <p class="card-text">Status: {{ offer.status }}</p>
+      <p class="card-text">Product: {{ offer.product?.name }}</p>
+    </div>
+  </div>
+</div>

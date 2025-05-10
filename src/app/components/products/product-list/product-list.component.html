@@ -1,0 +1,167 @@
+<div class="product-list fade-in">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mb-1">Products</h1>
+      <p class="text-muted">Manage your inventory products</p>
+    </div>
+    <a [routerLink]="['/products/new']" class="btn btn-primary">
+      <i class="fas fa-plus me-2"></i> Add New Product
+    </a>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="card mb-4 border-0">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0">
+              <i class="fas fa-search text-muted"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control border-start-0" 
+              placeholder="Search products by name, description or category..." 
+              [(ngModel)]="searchTerm"
+              (keyup)="applyFilter()"
+            >
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <select class="form-select" [(ngModel)]="categoryFilter" (change)="applyFilter()">
+            <option value="">All Categories</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Footwear">Footwear</option>
+            <option value="Clothing">Clothing</option>
+            <option value="Home & Kitchen">Home & Kitchen</option>
+          </select>
+        </div>
+        
+        <div class="col-md-3">
+          <select class="form-select" [(ngModel)]="statusFilter" (change)="applyFilter()">
+            <option value="">All Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="LOW_STOCK">Low Stock</option>
+            <option value="OUT_OF_STOCK">Out of Stock</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product List -->
+  <div class="card border-0">
+    <div class="card-body p-0">
+      <!-- Loading Indicator -->
+      <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading products...</p>
+      </div>
+      
+      <!-- Products Table -->
+      <div class="table-responsive" *ngIf="!loading && filteredProducts.length > 0">
+        <table class="table product-table align-middle table-hover mb-0">
+          <thead>
+            <tr>
+              <th>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="selectAll" 
+                        [checked]="isAllSelected()" (change)="toggleSelectAll()">
+                </div>
+              </th>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Status</th>
+              <th>Category</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let product of filteredProducts">
+              <td>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" 
+                        [id]="'product-' + product.id"
+                        [(ngModel)]="product.selected">
+                </div>
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="product-image me-3">
+                    <div class="image-placeholder">
+                      <i class="fas fa-box"></i>
+                    </div>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">{{ product.name }}</h6>
+                    <small class="text-muted">ID: {{ product.id }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="fw-semibold">${{ product.price | number:'1.2-2' }}</div>
+              </td>
+              <td>
+                <div [ngClass]="{'text-danger fw-bold': product.stockQuantity !== undefined && product.stockQuantity <= 5}">
+                  {{ product.stockQuantity }}
+                </div>
+              </td>
+              <td>
+                <span class="badge rounded-pill" [ngClass]="{
+                  'bg-success': product.status === 'ACTIVE',
+                  'bg-warning text-dark': product.status === 'LOW_STOCK',
+                  'bg-danger': product.status === 'OUT_OF_STOCK'
+                }">{{ product.status }}</span>
+              </td>
+              <td>{{ product.category?.name || 'Uncategorized' }}</td>
+              <td>
+                <div class="action-buttons">
+                  <a [routerLink]="['/products', product.id]" class="btn btn-sm btn-icon btn-outline-info me-1" title="View Details">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a [routerLink]="['/products', product.id, 'edit']" class="btn btn-sm btn-icon btn-outline-primary me-1" title="Edit Product">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <button class="btn btn-sm btn-icon btn-outline-danger" title="Delete Product" (click)="deleteProduct(product.id!)">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Empty State -->
+      <div *ngIf="!loading && filteredProducts.length === 0" class="text-center py-5">
+        <i class="fas fa-search fa-3x text-secondary mb-3"></i>
+        <h5>No products found</h5>
+        <p class="text-muted">Try adjusting your search or filter to find what you're looking for.</p>
+        <button class="btn btn-outline-primary" (click)="resetFilters()">
+          <i class="fas fa-redo me-2"></i> Reset Filters
+        </button>
+      </div>
+    </div>
+    
+    <!-- Pagination -->
+    <div *ngIf="!loading && filteredProducts.length > 0" class="card-footer bg-white border-0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-muted">Showing {{ filteredProducts.length }} of {{ products.length }} products</span>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-danger me-2" [disabled]="!hasSelectedProducts()" (click)="deleteSelected()">
+            <i class="fas fa-trash me-1"></i> Delete Selected
+          </button>
+          <button class="btn btn-sm btn-secondary">
+            <i class="fas fa-download me-1"></i> Export
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

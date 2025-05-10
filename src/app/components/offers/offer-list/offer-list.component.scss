@@ -1,0 +1,70 @@
+.offer-list {
+  .card {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .image-placeholder {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+  }
+  
+  .offer-table {
+    th {
+      white-space: nowrap;
+    }
+    
+    td {
+      vertical-align: middle;
+    }
+    
+    .action-buttons {
+      display: flex;
+      
+      .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        
+        i {
+          font-size: 0.8rem;
+        }
+      }
+    }
+  }
+  
+  // Checkbox styling
+  .form-check-input {
+    cursor: pointer;
+    
+    &:checked {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+  }
+  
+  // Animation
+  .fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

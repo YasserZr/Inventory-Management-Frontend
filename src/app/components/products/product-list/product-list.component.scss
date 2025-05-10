@@ -1,0 +1,66 @@
+.product-list {
+  .card {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .image-placeholder {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+  }
+  
+  .product-table {
+    th {
+      white-space: nowrap;
+    }
+    
+    td {
+      vertical-align: middle;
+    }
+    
+    .action-buttons {
+      display: flex;
+      
+      .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        
+        i {
+          font-size: 0.8rem;
+        }
+      }
+    }
+  }
+  
+  // Checkbox styling
+  .form-check-input {
+    cursor: pointer;
+    
+    &:checked {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+  }
+  
+  // Empty state styling
+  .empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+    
+    .icon {
+      font-size: 3rem;
+      color: #ccc;
+      margin-bottom: 1rem;
+    }
+  }
+}

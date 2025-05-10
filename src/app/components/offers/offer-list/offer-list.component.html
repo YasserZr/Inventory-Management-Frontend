@@ -1,0 +1,168 @@
+<div class="offer-list fade-in">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mb-1">Supplier Offers</h1>
+      <p class="text-muted">Manage special deals from your suppliers</p>
+    </div>
+    <a routerLink="/offers/new" class="btn btn-primary">
+      <i class="fas fa-plus me-2"></i> Add New Offer
+    </a>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="card mb-4 border-0">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0">
+              <i class="fas fa-search text-muted"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control border-start-0" 
+              placeholder="Search offers by title, product or description..." 
+              [(ngModel)]="searchTerm"
+              (keyup)="applyFilters()"
+            >
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <select class="form-select" [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="">All Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="PENDING">Pending</option>
+            <option value="EXPIRED">Expired</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Offer List -->
+  <div class="card border-0">
+    <div class="card-body p-0">
+      <!-- Loading Indicator -->
+      <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading offers...</p>
+      </div>
+      
+      <!-- Offers Table -->
+      <div class="table-responsive" *ngIf="!loading && filteredOffers.length > 0">
+        <table class="table offer-table align-middle table-hover mb-0">
+          <thead>
+            <tr>
+              <th>
+                <div class="form-check">                  <input class="form-check-input" type="checkbox" id="selectAll" 
+                         [checked]="hasSelectedOffers() && selectedOffers.size === filteredOffers.length" 
+                         (change)="toggleSelectAll()">
+                </div>
+              </th>
+              <th>Offer</th>
+              <th>Product</th>
+              <th>Supplier</th>
+              <th>Discount</th>
+              <th>Valid Period</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let offer of filteredOffers">
+              <td>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" 
+                         [id]="'offer-' + offer.offerId"
+                         [checked]="isOfferSelected(offer.offerId)"
+                         (change)="toggleSelectOffer(offer.offerId)">
+                </div>
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="offer-image me-3">
+                    <div class="image-placeholder">
+                      <i class="fas fa-tag"></i>
+                    </div>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">{{ offer.title }}</h6>
+                    <small class="text-muted d-block text-truncate" style="max-width: 200px;">{{ offer.description }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                {{ offer.product?.name || 'N/A' }}
+              </td>
+              <td>
+                {{ offer.supplier?.firstname }} {{ offer.supplier?.lastname }}
+              </td>
+              <td>
+                <div class="d-flex flex-column">
+                  <span class="fw-semibold">{{ getDiscountDisplay(offer) }}</span>
+                  <small class="text-muted">Min Qty: {{ offer.minimumQuantity || 'N/A' }}</small>
+                </div>
+              </td>
+              <td>
+                <div class="d-flex flex-column">
+                  <small class="text-muted">
+                    <i class="fas fa-calendar-alt me-1"></i> {{ getFormattedDate(offer.startDate) }} - {{ getFormattedDate(offer.endDate) }}
+                  </small>
+                </div>
+              </td>
+              <td>
+                <span class="badge rounded-pill" [ngClass]="getStatusClass(offer.status)">
+                  {{ offer.status ? (offerService.getStatusLabel(offer.status)) : 'Unknown' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <a [routerLink]="['/offers', offer.offerId]" class="btn btn-sm btn-icon btn-outline-info me-1" title="View Details">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a [routerLink]="['/offers', offer.offerId, 'edit']" class="btn btn-sm btn-icon btn-outline-primary me-1" title="Edit Offer">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <button class="btn btn-sm btn-icon btn-outline-danger" title="Delete Offer">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Empty State -->
+      <div *ngIf="!loading && filteredOffers.length === 0" class="text-center py-5">
+        <i class="fas fa-tags fa-3x text-secondary mb-3"></i>
+        <h5>No offers found</h5>
+        <p class="text-muted">Try adjusting your search or filter to find what you're looking for.</p>
+        <button class="btn btn-outline-primary" (click)="resetFilters()">
+          <i class="fas fa-redo me-2"></i> Reset Filters
+        </button>
+      </div>
+    </div>
+    
+    <!-- Pagination and Actions -->
+    <div *ngIf="!loading && filteredOffers.length > 0" class="card-footer bg-white border-0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-muted">Showing {{ filteredOffers.length }} of {{ offers.length }} offers</span>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-danger me-2" [disabled]="!hasSelectedOffers()" (click)="deleteSelected()">
+            <i class="fas fa-trash me-1"></i> Delete Selected
+          </button>
+          <button class="btn btn-sm btn-secondary">
+            <i class="fas fa-download me-1"></i> Export
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
