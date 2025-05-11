@@ -9,6 +9,7 @@ import { SalesOrderFormComponent } from './components/sales-orders/sales-order-f
 import { SupplierListComponent } from './components/suppliers/supplier-list/supplier-list.component';
 import { SupplierDetailComponent } from './components/suppliers/supplier-detail/supplier-detail.component';
 import { SupplierFormComponent } from './components/suppliers/supplier-form/supplier-form.component';
+import { ContractFormComponent } from './components/suppliers/contract-form/contract-form.component';
 import { OfferListComponent } from './components/offers/offer-list/offer-list.component';
 import { OfferDetailComponent } from './components/offers/offer-detail/offer-detail.component';
 import { OfferFormComponent } from './components/offers/offer-form/offer-form.component';
@@ -41,12 +42,13 @@ export const routes: Routes = [
   { path: 'sales-orders/new', component: SalesOrderFormComponent, canActivate: [roleGuard(['USER', 'ADMIN'])] },
   { path: 'sales-orders/:id', component: SalesOrderDetailComponent, canActivate: [roleGuard(['USER', 'ADMIN'])] },
   { path: 'sales-orders/:id/edit', component: SalesOrderFormComponent, canActivate: [roleGuard(['USER', 'ADMIN'])] },
-  
   // Supplier routes - Admin can access all, Suppliers can access their own
   { path: 'suppliers', component: SupplierListComponent, canActivate: [roleGuard(['ADMIN', 'USER'])] },
-  { path: 'suppliers/:id', component: SupplierDetailComponent, canActivate: [authGuard] },
+  { path: 'suppliers/contracts/new', component: ContractFormComponent, canActivate: [roleGuard(['ADMIN', 'USER'])] },
+  { path: 'suppliers/contracts/:id', component: ContractFormComponent, canActivate: [roleGuard(['ADMIN', 'USER'])] },
   { path: 'suppliers/new', component: SupplierFormComponent, canActivate: [roleGuard(['ADMIN'])] },
   { path: 'suppliers/:id/edit', component: SupplierFormComponent, canActivate: [roleGuard(['ADMIN', 'SUPPLIER'])] },
+  { path: 'suppliers/:id', component: SupplierDetailComponent, canActivate: [authGuard] },
   
   // Offer routes - Suppliers can create/edit offers, Users and Admin can view
   { path: 'offers', component: OfferListComponent, canActivate: [authGuard] },

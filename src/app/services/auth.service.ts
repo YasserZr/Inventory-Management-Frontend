@@ -117,6 +117,28 @@ export class AuthService {
   }
   
   /**
+   * Refreshes the current user data from the server
+   */
+  refreshUserData(): Observable<User> {
+    const username = this.getCurrentUser()?.username;
+    if (!username) {
+      throw new Error('No user logged in');
+    }
+    
+    // This endpoint should return the current user data
+    return this.apiService.get<User>(`api/users/username/${username}`).pipe(
+      tap(user => {
+        if (user) {
+          // Update stored user data
+          if (this.isBrowser) {
+            localStorage.setItem(this.userKey, JSON.stringify(user));
+          }
+        }
+      })
+    );
+  }
+  
+  /**
    * Check if the current token is valid
    */
   private hasValidToken(): boolean {

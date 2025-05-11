@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { User } from '../models/user.model';
 import { environment } from '../../environments/environment';
 
@@ -8,12 +8,17 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class SupplierService {
-  private apiUrl = `${environment.apiUrl}/api/suppliers`;
+  private apiUrl = `${environment.apiUrl}/api/users`;
 
   constructor(private http: HttpClient) {}
-
   getSuppliers(): Observable<User[]> {
-    return this.http.get<User[]>(this.apiUrl);
+    // Get all suppliers, regardless of contracts
+    return this.http.get<User[]>(`${this.apiUrl}/role/SUPPLIER`);
+  }
+  
+  getSuppliersWithActiveContracts(): Observable<User[]> {
+    // Get only suppliers with active contracts for the current user
+    return this.http.get<User[]>(`${this.apiUrl}/suppliers/contracted`);
   }
 
   getSupplier(id: string): Observable<User> {
@@ -21,10 +26,14 @@ export class SupplierService {
   }
 
   createSupplier(supplier: User): Observable<User> {
+    // Make sure the role is set to SUPPLIER
+    supplier.role = 'SUPPLIER';
     return this.http.post<User>(this.apiUrl, supplier);
   }
 
   updateSupplier(id: string, supplier: User): Observable<User> {
+    // Make sure the role is set to SUPPLIER
+    supplier.role = 'SUPPLIER';
     return this.http.put<User>(`${this.apiUrl}/${id}`, supplier);
   }
 
