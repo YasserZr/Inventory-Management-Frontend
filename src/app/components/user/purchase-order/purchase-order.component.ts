@@ -1,0 +1,222 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
+import { PurchaseOrder } from '../../../models/purchase-order';
+import { PurchaseOrderLine } from '../../../models/purchase-order-line';
+import { Product } from '../../../models/product';
+import { SalesOrderService } from '../../../services/sales-order.service';
+
+interface OrderItem {
+  product: Product;
+  quantity: number;
+  price: number;
+}
+
+@Component({
+  selector: 'app-purchase-order',
+  standalone: true,
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, HttpClientModule],
+  templateUrl: './purchase-order.component.html',
+  styleUrl: './purchase-order.component.scss'
+})
+export class PurchaseOrderComponent implements OnInit {
+  orderForm!: FormGroup;
+  loading = false;
+  submitted = false;
+  orderItems: OrderItem[] = [];
+  
+  // Payment options
+  paymentStatusOptions = [
+    { value: 'PENDING', label: 'Pending' },
+    { value: 'PAID', label: 'Paid' }
+  ];
+  
+  paymentMethodOptions = [
+    { value: 'CREDIT_CARD', label: 'Credit Card' },
+    { value: 'DEBIT_CARD', label: 'Debit Card' },
+    { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
+    { value: 'PAYPAL', label: 'PayPal' },
+    { value: 'CASH', label: 'Cash' }
+  ];
+
+  constructor(
+    private formBuilder: FormBuilder,
+    private router: Router,
+    private route: ActivatedRoute,
+    private salesOrderService: SalesOrderService
+  ) {}
+
+  ngOnInit(): void {
+    this.initForm();
+    this.loadMockProducts();
+  }
+  
+  // Initialize form with validation
+  private initForm(): void {
+    this.orderForm = this.formBuilder.group({
+      paymentMethod: ['CREDIT_CARD', [Validators.required]],
+      shippingAddress: ['', [Validators.required]],
+      billingAddress: ['', [Validators.required]],
+      notes: [''],
+      orderItems: this.formBuilder.array([])
+    });
+  }
+  
+  // Load sample products (since we no longer have cart)
+  private loadMockProducts(): void {
+    // Mock products for the order
+    this.orderItems = [
+      {
+        product: {
+          id: 1,
+          name: 'Dell XPS 13',
+          description: 'High-performance laptop with InfinityEdge display',
+          price: 1299.99,
+          stockQuantity: 10,
+          status: 'ACTIVE',
+          category: { categoryId: 1, name: 'Electronics' }
+        },
+        quantity: 1,
+        price: 1299.99
+      },
+      {
+        product: {
+          id: 5,
+          name: 'HP LaserJet Printer',
+          description: 'High-quality laser printer for office use',
+          price: 349.99,
+          stockQuantity: 15,
+          status: 'ACTIVE',
+          category: { categoryId: 1, name: 'Electronics' }
+        },
+        quantity: 2,
+        price: 349.99
+      }
+    ];
+  }
+  
+  // Easy access to form controls
+  get f() {
+    return this.orderForm.controls;
+  }
+  
+  // Copy shipping address to billing address
+  copyShippingToBilling(): void {
+    const shippingAddress = this.f['shippingAddress'].value;
+    this.orderForm.patchValue({
+      billingAddress: shippingAddress
+    });
+  }
+  
+  // Calculate order total
+  calculateTotal(): number {
+    return this.orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  }
+  
+  // Check stock availability before placing an order
+  validateStockAvailability(): { valid: boolean, message?: string } {
+    // In a real application, this would call the backend to validate stock availability
+    // For now, we'll implement a simple mock check
+    
+    const outOfStockItems: string[] = [];
+    const lowStockItems: string[] = [];
+    
+    // Simulate random stock validation
+    this.orderItems.forEach(item => {
+      // Simulate ~5% chance of out-of-stock
+      if (Math.random() < 0.05) {
+        outOfStockItems.push(item.product.name || 'Unknown Product');
+      }
+      // Simulate ~10% chance of low stock
+      else if (Math.random() < 0.1) {
+        lowStockItems.push(item.product.name || 'Unknown Product');
+      }
+    });
+    
+    // If we have out-of-stock items, consider this a validation failure
+    if (outOfStockItems.length > 0) {
+      return {
+        valid: false,
+        message: `The following items are out of stock: ${outOfStockItems.join(', ')}`
+      };
+    }
+    
+    // If we have low stock items, warn but allow the order
+    if (lowStockItems.length > 0) {
+      // Just display a warning but continue with order
+      console.warn(`Low stock warning for items: ${lowStockItems.join(', ')}`);
+    }
+    
+    return { valid: true };
+  }
+  
+  // Submit form handler
+  onSubmit(): void {
+    this.submitted = true;
+    
+    if (this.orderForm.invalid) {
+      return;
+    }
+    
+    // Check stock availability (in a real app, this would be a backend call)
+    const stockValidationResults = this.validateStockAvailability();
+    if (!stockValidationResults.valid) {
+      alert(`Stock validation failed: ${stockValidationResults.message}`);
+      return;
+    }
+    
+    // Prepare order lines from order items
+    const orderLines: PurchaseOrderLine[] = this.orderItems.map(item => ({
+      product: { id: item.product.id },
+      quantity: item.quantity,
+      priceAtPurchase: item.price
+    }));
+    
+    // Prepare order data
+    const orderData: PurchaseOrder = {
+      status: 'PENDING',
+      totalAmount: this.calculateTotal(),
+      orderDate: new Date().toISOString(),
+      paymentStatus: 'PENDING',
+      paymentMethod: this.f['paymentMethod'].value,
+      shippingAddress: this.f['shippingAddress'].value,
+      billingAddress: this.f['billingAddress'].value,
+      notes: this.f['notes'].value,
+      supplier: { id: 1 }, // This would normally be the supplier ID
+      purchaseOrderLines: orderLines
+    };
+    
+    this.salesOrderService.createOrder(orderData).subscribe({
+      next: (response) => {
+        // Navigate to order confirmation page with order ID
+        const orderId = response?.poId || 12345; // Use mock ID if API doesn't return an ID
+        this.router.navigate(['/user/order-confirmation', orderId]);
+      },
+      error: (error) => {
+        console.error('Error creating order', error);
+        // For development, simulate success
+        // Use a mock order ID for the demo
+        const mockOrderId = Math.floor(Math.random() * 10000) + 1000;
+        this.router.navigate(['/user/order-confirmation', mockOrderId]);
+      }
+    });
+  }
+  
+  // Update item quantity
+  updateQuantity(index: number, quantity: number): void {
+    if (quantity < 1) quantity = 1;
+    this.orderItems[index].quantity = quantity;
+  }
+  
+  // Remove item from order
+  removeItem(index: number): void {
+    this.orderItems.splice(index, 1);
+  }
+  
+  // Navigate back to offers
+  returnToOffers(): void {
+    this.router.navigate(['/user/offers']);
+  }
+}

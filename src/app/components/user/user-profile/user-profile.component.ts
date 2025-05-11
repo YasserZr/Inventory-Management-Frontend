@@ -1,0 +1,258 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AuthService } from '../../../services/auth.service';
+import { UserService } from '../../../services/user.service';
+import { Router } from '@angular/router';
+import { finalize } from 'rxjs/operators';
+
+@Component({
+  selector: 'app-user-profile',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+              <h2>User Profile</h2>
+            </div>
+            <div class="card-body">
+              <div *ngIf="successMessage" class="alert alert-success" role="alert">
+                {{ successMessage }}
+              </div>
+              <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+                {{ errorMessage }}
+              </div>
+              
+              <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" *ngIf="user">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="name">Full Name</label>
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        id="name" 
+                        formControlName="name"
+                      >
+                      <div *ngIf="profileForm.get('name')?.invalid && profileForm.get('name')?.touched" class="text-danger">
+                        Name is required
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="username">Username</label>
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        id="username" 
+                        formControlName="username"
+                        readonly
+                      >
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="email">Email</label>
+                      <input 
+                        type="email" 
+                        class="form-control" 
+                        id="email" 
+                        formControlName="email"
+                      >
+                      <div *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched" class="text-danger">
+                        Please enter a valid email
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="role">Role</label>
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        id="role" 
+                        formControlName="role"
+                        readonly
+                      >
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="address">Address</label>
+                      <textarea 
+                        class="form-control" 
+                        id="address" 
+                        formControlName="address" 
+                        rows="3"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="phoneNumber">Phone Number</label>
+                      <input 
+                        type="tel" 
+                        class="form-control" 
+                        id="phoneNumber" 
+                        formControlName="phoneNumber"
+                      >
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-group mb-4">
+                  <label for="newPassword">New Password (leave empty if you don't want to change)</label>
+                  <input 
+                    type="password" 
+                    class="form-control" 
+                    id="newPassword" 
+                    formControlName="newPassword"
+                  >
+                  <div *ngIf="profileForm.get('newPassword')?.invalid && profileForm.get('newPassword')?.touched" class="text-danger">
+                    Password must be at least 6 characters
+                  </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                  <button type="button" class="btn btn-secondary" (click)="goBack()">Back</button>
+                  <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || isLoading">
+                    {{ isLoading ? 'Saving...' : 'Save Changes' }}
+                  </button>
+                </div>
+              </form>
+              
+              <div *ngIf="isLoading" class="d-flex justify-content-center mt-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-control {
+      padding: .375rem .75rem;
+      font-size: 1rem;
+      border: 1px solid #ced4da;
+      border-radius: .25rem;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      border-color: #6c757d;
+    }
+  `]
+})
+export class UserProfileComponent implements OnInit {
+  profileForm!: FormGroup;
+  user: any;
+  isLoading = false;
+  successMessage = '';
+  errorMessage = '';
+
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private userService: UserService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.isLoading = true;
+    this.user = this.authService.getCurrentUser();
+    
+    if (!this.user) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    
+    // Try to get the latest user data from the backend
+    this.userService.getCurrentUserProfile()
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (userData) => {
+          this.user = userData;
+          this.initializeForm();
+        },
+        error: (error) => {
+          // If API call fails, just use the cached user data
+          console.error('Failed to fetch user profile:', error);
+          this.initializeForm();
+        }
+      });
+  }
+
+  initializeForm(): void {
+    this.profileForm = this.fb.group({
+      name: [this.user.name || '', Validators.required],
+      username: [{value: this.user.username, disabled: true}],
+      email: [this.user.email || '', [Validators.required, Validators.email]],
+      role: [{value: this.user.role, disabled: true}],
+      address: [this.user.address || ''],
+      phoneNumber: [this.user.phoneNumber || ''],
+      newPassword: ['', [Validators.minLength(6)]]
+    });
+  }
+  
+  onSubmit(): void {
+    if (this.profileForm.invalid) {
+      return;
+    }
+    
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    
+    const formValue = this.profileForm.getRawValue();
+    const userData = {
+      name: formValue.name,
+      email: formValue.email,
+      address: formValue.address,
+      phoneNumber: formValue.phoneNumber
+    };
+    
+    // Only include password if provided
+    if (formValue.newPassword) {
+      Object.assign(userData, { password: formValue.newPassword });
+    }
+    
+    this.userService.updateProfile(userData)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (response) => {
+          // Update the stored user data
+          const updatedUser = { ...this.user, ...response };
+          localStorage.setItem('auth_user', JSON.stringify(updatedUser));
+          
+          this.successMessage = 'Profile updated successfully!';
+        },
+        error: (error) => {
+          console.error('Failed to update profile:', error);
+          this.errorMessage = error.error?.message || 'Failed to update profile. Please try again.';
+        }
+      });
+  }
+  
+  goBack(): void {
+    this.router.navigate(['/dashboard']);
+  }
+}

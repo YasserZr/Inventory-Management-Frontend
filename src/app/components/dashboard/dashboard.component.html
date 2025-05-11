@@ -1,6 +1,7 @@
 <div class="dashboard fade-in">  <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <h1 class="mb-1">Welcome to BuyNGo Inventory</h1>
+      <h1 class="mb-1" *ngIf="currentUser">Welcome, {{currentUser.name || currentUser.username}}</h1>
+      <h1 class="mb-1" *ngIf="!currentUser">Welcome to BuyNGo Inventory</h1>
       <p class="text-muted">Dashboard overview and summary</p>
     </div>
     <div>

@@ -22,7 +22,6 @@ export class ProductFormComponent implements OnInit {
   productId?: number;
   categories: Category[] = [];
   suppliers: User[] = [];
-
   // Mock data for demonstration
   mockProducts: Product[] = [
     {
@@ -33,7 +32,7 @@ export class ProductFormComponent implements OnInit {
       stockQuantity: 15,
       status: 'ACTIVE',
       category: { categoryId: 1, name: 'Electronics' },
-      supplier: { id: 1, firstname: 'Dell', lastname: 'Inc.', email: 'supplier@dell.com', role: 'SUPPLIER' },
+      supplier: { id: 1, username: 'dell_supplier', firstname: 'Dell', lastname: 'Inc.', email: 'supplier@dell.com', role: 'SUPPLIER' },
       createdAt: '2025-04-15T10:30:00',
       updatedAt: '2025-05-01T14:22:00'
     },
@@ -45,7 +44,7 @@ export class ProductFormComponent implements OnInit {
       stockQuantity: 8,
       status: 'ACTIVE',
       category: { categoryId: 1, name: 'Electronics' },
-      supplier: { id: 2, firstname: 'Apple', lastname: 'Inc.', email: 'supplier@apple.com', role: 'SUPPLIER' },
+      supplier: { id: 2, username: 'apple_supplier', firstname: 'Apple', lastname: 'Inc.', email: 'supplier@apple.com', role: 'SUPPLIER' },
       createdAt: '2025-04-18T09:15:00',
       updatedAt: '2025-05-02T11:45:00'
     }
@@ -58,13 +57,12 @@ export class ProductFormComponent implements OnInit {
     { categoryId: 4, name: 'Home & Kitchen' },
     { categoryId: 5, name: 'Books' }
   ];
-
   mockSuppliers: User[] = [
-    { id: 1, firstname: 'Dell', lastname: 'Inc.', email: 'supplier@dell.com', role: 'SUPPLIER' },
-    { id: 2, firstname: 'Apple', lastname: 'Inc.', email: 'supplier@apple.com', role: 'SUPPLIER' },
-    { id: 3, firstname: 'Samsung', lastname: 'Electronics', email: 'supplier@samsung.com', role: 'SUPPLIER' },
-    { id: 4, firstname: 'Sony', lastname: 'Interactive', email: 'supplier@sony.com', role: 'SUPPLIER' },
-    { id: 5, firstname: 'Nike', lastname: 'Inc.', email: 'supplier@nike.com', role: 'SUPPLIER' }
+    { id: 1, username: 'dell_supplier', firstname: 'Dell', lastname: 'Inc.', email: 'supplier@dell.com', role: 'SUPPLIER' },
+    { id: 2, username: 'apple_supplier', firstname: 'Apple', lastname: 'Inc.', email: 'supplier@apple.com', role: 'SUPPLIER' },
+    { id: 3, username: 'samsung_supplier', firstname: 'Samsung', lastname: 'Electronics', email: 'supplier@samsung.com', role: 'SUPPLIER' },
+    { id: 4, username: 'sony_supplier', firstname: 'Sony', lastname: 'Interactive', email: 'supplier@sony.com', role: 'SUPPLIER' },
+    { id: 5, username: 'nike_supplier', firstname: 'Nike', lastname: 'Inc.', email: 'supplier@nike.com', role: 'SUPPLIER' }
   ];
 
   constructor(

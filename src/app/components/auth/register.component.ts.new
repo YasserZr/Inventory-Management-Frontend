@@ -1,0 +1,350 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { RegisterRequest } from '../../models/register-request.model';
+import { finalize } from 'rxjs/operators';
+import { ErrorHandlingService } from '../../services/error-handling.service';
+
+@Component({
+  selector: 'app-register',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  template: `
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-6 offset-md-3">
+          <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+              <h2>Register</h2>
+            </div>
+            <div class="card-body">
+              <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+                {{ errorMessage }}
+              </div>
+              
+              <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+                <div class="form-group mb-3">
+                  <label for="username">Username</label>
+                  <input 
+                    type="text" 
+                    formControlName="username" 
+                    class="form-control" 
+                    id="username" 
+                    placeholder="Choose a username"
+                  >
+                  <div *ngIf="f.username.touched && f.username.errors" class="text-danger">
+                    <small *ngIf="f.username.errors.required">Username is required</small>
+                    <small *ngIf="f.username.errors.minlength">Username must be at least 3 characters</small>
+                  </div>
+                </div>
+                
+                <div class="row mb-3">
+                  <div class="col">
+                    <div class="form-group">
+                      <label for="firstname">First Name</label>
+                      <input 
+                        type="text" 
+                        formControlName="firstname" 
+                        class="form-control" 
+                        id="firstname" 
+                        placeholder="First name"
+                      >
+                      <div *ngIf="f.firstname.touched && f.firstname.errors" class="text-danger">
+                        <small *ngIf="f.firstname.errors.required">First name is required</small>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col">
+                    <div class="form-group">
+                      <label for="lastname">Last Name</label>
+                      <input 
+                        type="text" 
+                        formControlName="lastname" 
+                        class="form-control" 
+                        id="lastname" 
+                        placeholder="Last name"
+                      >
+                      <div *ngIf="f.lastname.touched && f.lastname.errors" class="text-danger">
+                        <small *ngIf="f.lastname.errors.required">Last name is required</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-group mb-3">
+                  <label for="email">Email</label>
+                  <input 
+                    type="email" 
+                    formControlName="email" 
+                    class="form-control" 
+                    id="email" 
+                    placeholder="Enter email"
+                  >
+                  <div *ngIf="f.email.touched && f.email.errors" class="text-danger">
+                    <small *ngIf="f.email.errors.required">Email is required</small>
+                    <small *ngIf="f.email.errors.email">Please enter a valid email</small>
+                  </div>
+                </div>
+                
+                <div class="form-group mb-3">
+                  <label for="password">Password</label>
+                  <input 
+                    type="password" 
+                    formControlName="password" 
+                    class="form-control" 
+                    id="password" 
+                    placeholder="Password"
+                  >
+                  <div *ngIf="f.password.touched && f.password.errors" class="text-danger">
+                    <small *ngIf="f.password.errors.required">Password is required</small>
+                    <small *ngIf="f.password.errors.minlength">Password must be at least 6 characters</small>
+                  </div>
+                </div>
+                
+                <div class="form-group mb-3">
+                  <label for="confirmPassword">Confirm Password</label>
+                  <input 
+                    type="password" 
+                    formControlName="confirmPassword" 
+                    class="form-control" 
+                    id="confirmPassword" 
+                    placeholder="Confirm password"
+                  >
+                  <div *ngIf="f.confirmPassword.touched && f.confirmPassword.errors" class="text-danger">
+                    <small *ngIf="f.confirmPassword.errors.required">Please confirm your password</small>
+                    <small *ngIf="f.confirmPassword.errors.passwordMismatch">Passwords do not match</small>
+                  </div>
+                </div>
+                
+                <div class="form-group mb-3">
+                  <label for="address">Address</label>
+                  <textarea 
+                    formControlName="address" 
+                    class="form-control" 
+                    id="address" 
+                    placeholder="Enter your address"
+                    rows="2"
+                  ></textarea>
+                </div>
+                
+                <div class="form-group mb-3">
+                  <label for="phoneNumber">Phone Number</label>
+                  <input 
+                    type="tel" 
+                    formControlName="phoneNumber" 
+                    class="form-control" 
+                    id="phoneNumber" 
+                    placeholder="Phone number"
+                  >
+                </div>
+                
+                <div class="form-group mb-3">
+                  <label>Account Type</label>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" formControlName="role" id="roleUser" value="USER">
+                    <label class="form-check-label" for="roleUser">
+                      Customer
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" formControlName="role" id="roleSupplier" value="SUPPLIER">
+                    <label class="form-check-label" for="roleSupplier">
+                      Supplier
+                    </label>
+                  </div>
+                </div>
+                
+                <!-- Supplier-specific fields -->
+                <div *ngIf="f.role.value === 'SUPPLIER'" class="supplier-fields mb-3">
+                  <h5>Supplier Information</h5>
+                  <div class="form-group mb-2">
+                    <label for="companyName">Company Name</label>
+                    <input 
+                      type="text" 
+                      formControlName="companyName" 
+                      class="form-control" 
+                      id="companyName" 
+                      placeholder="Company name"
+                    >
+                    <div *ngIf="isSupplier && f.companyName.touched && f.companyName.errors" class="text-danger">
+                      <small *ngIf="f.companyName.errors.required">Company name is required for suppliers</small>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group mb-2">
+                    <label for="companyEmail">Company Email</label>
+                    <input 
+                      type="email" 
+                      formControlName="companyEmail" 
+                      class="form-control" 
+                      id="companyEmail" 
+                      placeholder="Company email"
+                    >
+                  </div>
+                  
+                  <div class="form-group mb-2">
+                    <label for="companyAddress">Company Address</label>
+                    <textarea 
+                      formControlName="companyAddress" 
+                      class="form-control" 
+                      id="companyAddress" 
+                      placeholder="Company address"
+                      rows="2"
+                    ></textarea>
+                  </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                  <button 
+                    type="submit" 
+                    class="btn btn-primary" 
+                    [disabled]="registerForm.invalid || isLoading"
+                  >
+                    {{ isLoading ? 'Registering...' : 'Register' }}
+                  </button>
+                </div>
+              </form>
+              
+              <div class="text-center mt-3">
+                <p>Already have an account? <a routerLink="/login">Login here</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .form-control {
+      padding: 0.375rem 0.75rem;
+    }
+    .card-header {
+      padding: 1rem;
+    }
+    .btn-primary {
+      background-color: #007bff;
+    }
+    .supplier-fields {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 0.25rem;
+    }
+  `]
+})
+export class RegisterComponent implements OnInit {
+  registerForm!: FormGroup;
+  isLoading = false;
+  errorMessage = '';
+  isSupplier = false;
+
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router,
+    private errorHandler: ErrorHandlingService
+  ) {}
+
+  ngOnInit(): void {
+    this.initializeForm();
+    
+    // Watch for role changes to toggle supplier fields validation
+    this.registerForm.get('role')?.valueChanges.subscribe(role => {
+      this.isSupplier = role === 'SUPPLIER';
+      this.updateValidators();
+    });
+  }
+
+  // Getter for easy access to form fields
+  get f() { 
+    return this.registerForm.controls; 
+  }
+  
+  initializeForm(): void {
+    this.registerForm = this.fb.group({
+      username: ['', [Validators.required, Validators.minLength(3)]],
+      firstname: ['', [Validators.required]],
+      lastname: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]],
+      address: [''],
+      phoneNumber: [''],
+      role: ['USER', [Validators.required]],
+      companyName: [''],
+      companyEmail: [''],
+      companyAddress: ['']
+    }, {
+      validators: this.passwordMatchValidator
+    });
+  }
+  
+  // Update validators based on selected role
+  updateValidators(): void {
+    const companyNameControl = this.registerForm.get('companyName');
+    
+    if (this.isSupplier) {
+      companyNameControl?.setValidators([Validators.required]);
+    } else {
+      companyNameControl?.clearValidators();
+    }
+    
+    companyNameControl?.updateValueAndValidity();
+  }
+  
+  // Custom validator for password matching
+  passwordMatchValidator(formGroup: FormGroup) {
+    const password = formGroup.get('password')?.value;
+    const confirmPassword = formGroup.get('confirmPassword')?.value;
+    
+    if (password !== confirmPassword) {
+      formGroup.get('confirmPassword')?.setErrors({ passwordMismatch: true });
+      return { passwordMismatch: true };
+    } else {
+      return null;
+    }
+  }
+
+  onSubmit(): void {
+    if (this.registerForm.invalid) {
+      return;
+    }
+    
+    this.isLoading = true;
+    this.errorMessage = '';
+    
+    const formValues = this.registerForm.value;
+    
+    // Create register request from form values
+    const request: RegisterRequest = {
+      username: formValues.username,
+      firstname: formValues.firstname,
+      lastname: formValues.lastname,
+      email: formValues.email,
+      password: formValues.password,
+      address: formValues.address,
+      phoneNumber: formValues.phoneNumber,
+      role: formValues.role
+    };
+    
+    // Add supplier-specific fields if applicable
+    if (this.isSupplier) {
+      request.companyName = formValues.companyName;
+      request.companyEmail = formValues.companyEmail || formValues.email;
+      request.companyAddress = formValues.companyAddress || formValues.address;
+    }
+    
+    this.authService.register(request)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: () => {
+          this.router.navigate(['/dashboard']);
+        },
+        error: (error) => {
+          this.errorMessage = this.errorHandler.handleError(error);
+        }
+      });
+  }
+}

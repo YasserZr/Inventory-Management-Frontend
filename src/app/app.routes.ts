@@ -14,30 +14,52 @@ import { OfferDetailComponent } from './components/offers/offer-detail/offer-det
 import { OfferFormComponent } from './components/offers/offer-form/offer-form.component';
 import { ReportingDashboardComponent } from './components/reporting/reporting-dashboard/reporting-dashboard.component';
 
+import { LoginComponent } from './components/auth/login.component';
+import { RegisterComponent } from './components/auth/register.component';
+import { HomeComponent } from './components/home/home.component';
+import { UserProfileComponent } from './components/user/user-profile/user-profile.component';
+import { UnauthorizedComponent } from './components/shared/unauthorized/unauthorized.component';
+import { authGuard, roleGuard } from './guards/auth.guard';
+
 export const routes: Routes = [
-  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
-  { path: 'dashboard', component: DashboardComponent },
-  // Product routes
-  { path: 'products', component: ProductListComponent },
-  { path: 'products/new', component: ProductFormComponent },
-  { path: 'products/:id', component: ProductDetailComponent },
-  { path: 'products/:id/edit', component: ProductFormComponent },
-  // Sales Order routes
-  { path: 'sales-orders', component: SalesOrderListComponent },
-  { path: 'sales-orders/new', component: SalesOrderFormComponent },
-  { path: 'sales-orders/:id', component: SalesOrderDetailComponent },
-  { path: 'sales-orders/:id/edit', component: SalesOrderFormComponent },
-  // Supplier routes
-  { path: 'suppliers', component: SupplierListComponent },
-  { path: 'suppliers/new', component: SupplierFormComponent },
-  { path: 'suppliers/:id', component: SupplierDetailComponent },
-  { path: 'suppliers/:id/edit', component: SupplierFormComponent },
-  // Offer routes
-  { path: 'offers', component: OfferListComponent },
-  { path: 'offers/new', component: OfferFormComponent },
-  { path: 'offers/:id', component: OfferDetailComponent },
-  { path: 'offers/:id/edit', component: OfferFormComponent },
-  // Reporting routes
-  { path: 'reporting', component: ReportingDashboardComponent },
-  { path: '**', redirectTo: '/dashboard' } // Redirect any unknown routes to dashboard
+  { path: '', component: HomeComponent },  // Public routes (no authentication required)
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+  { path: 'unauthorized', component: UnauthorizedComponent },
+  
+  // User routes
+  { path: 'profile', component: UserProfileComponent, canActivate: [authGuard] },
+  // Protected routes (authentication required)
+  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },  // Product routes - Accessible by all authenticated users
+  { path: 'products', component: ProductListComponent, canActivate: [authGuard] },
+  { path: 'products/:id', component: ProductDetailComponent, canActivate: [authGuard] },
+  // Product management - Admin only
+  { path: 'products/new', component: ProductFormComponent, canActivate: [roleGuard(['ADMIN'])] },
+  { path: 'products/:id/edit', component: ProductFormComponent, canActivate: [roleGuard(['ADMIN'])] },
+  
+  // Sales Order routes - USER and ADMIN roles
+  { path: 'sales-orders', component: SalesOrderListComponent, canActivate: [roleGuard(['USER', 'ADMIN'])] },
+  { path: 'sales-orders/new', component: SalesOrderFormComponent, canActivate: [roleGuard(['USER', 'ADMIN'])] },
+  { path: 'sales-orders/:id', component: SalesOrderDetailComponent, canActivate: [roleGuard(['USER', 'ADMIN'])] },
+  { path: 'sales-orders/:id/edit', component: SalesOrderFormComponent, canActivate: [roleGuard(['USER', 'ADMIN'])] },
+  
+  // Supplier routes - Admin can access all, Suppliers can access their own
+  { path: 'suppliers', component: SupplierListComponent, canActivate: [roleGuard(['ADMIN', 'USER'])] },
+  { path: 'suppliers/:id', component: SupplierDetailComponent, canActivate: [authGuard] },
+  { path: 'suppliers/new', component: SupplierFormComponent, canActivate: [roleGuard(['ADMIN'])] },
+  { path: 'suppliers/:id/edit', component: SupplierFormComponent, canActivate: [roleGuard(['ADMIN', 'SUPPLIER'])] },
+  
+  // Offer routes - Suppliers can create/edit offers, Users and Admin can view
+  { path: 'offers', component: OfferListComponent, canActivate: [authGuard] },
+  { path: 'offers/:id', component: OfferDetailComponent, canActivate: [authGuard] },
+  { path: 'offers/new', component: OfferFormComponent, canActivate: [roleGuard(['SUPPLIER', 'ADMIN'])] },
+  { path: 'offers/:id/edit', component: OfferFormComponent, canActivate: [roleGuard(['SUPPLIER', 'ADMIN'])] },
+  
+  // Reporting routes - Admin only
+  { path: 'reporting', component: ReportingDashboardComponent, canActivate: [roleGuard(['ADMIN'])] },
+  
+  // User profile - Any authenticated user can access their profile
+  { path: 'profile', component: UserProfileComponent, canActivate: [authGuard] },
+  // Fallback route - Redirect to login if not logged in, otherwise to dashboard
+  { path: '**', redirectTo: '/login' }
 ];

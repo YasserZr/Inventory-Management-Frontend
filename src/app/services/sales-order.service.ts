@@ -2,13 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map, of } from 'rxjs';
 import { PurchaseOrder } from '../models/purchase-order';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SalesOrderService {
-  // Using a direct URL instead of environment for development
-  private apiUrl = 'http://localhost:8080/api/orders';
+  private apiUrl = `${environment.apiUrl}/api/orders`;
 
   constructor(private http: HttpClient) {}
 

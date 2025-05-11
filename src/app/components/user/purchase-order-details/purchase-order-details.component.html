@@ -1,0 +1,163 @@
+<div class="container mt-4">
+  <!-- Back button -->
+  <div class="mb-3">
+    <button class="btn btn-outline-secondary" (click)="navigateBack()">
+      <i class="fas fa-arrow-left me-2"></i> Back to Orders
+    </button>
+  </div>
+
+  <div class="card shadow">
+    <!-- Loading state -->
+    <div *ngIf="loading" class="card-body text-center p-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3">Loading order details...</p>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="card-body text-center p-5">
+      <div class="text-danger">
+        <i class="fas fa-exclamation-circle fa-3x"></i>
+        <h3 class="mt-3">Error Loading Order</h3>
+        <p>We couldn't load this order's details. Please try again later.</p>
+        <button class="btn btn-primary mt-2" (click)="loadOrderDetails()">
+          <i class="fas fa-sync-alt me-2"></i> Try Again
+        </button>
+      </div>
+    </div>
+
+    <!-- Order details -->
+    <div *ngIf="!loading && !error && order" class="card-body">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <h2 class="mb-0">Order #{{ order.orderId }}</h2>
+          <p class="text-muted">Placed on {{ order.orderDate | date:'medium' }}</p>
+        </div>
+        <div class="d-flex align-items-center">
+          <div [ngClass]="'status-badge ' + getOrderStatusClass(order.status || '')">
+            <i class="fas" [ngClass]="getOrderStatusIcon(order.status || '')"></i>
+            <span>{{ order.status }}</span>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Order information -->
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <h5>Shipping Information</h5>
+          <address class="mb-0">
+            <strong>{{ order.shippingAddress?.name }}</strong><br>
+            {{ order.shippingAddress?.street }}<br>
+            {{ order.shippingAddress?.city }}, {{ order.shippingAddress?.state }} {{ order.shippingAddress?.zipCode }}<br>
+            {{ order.shippingAddress?.country }}<br>
+            <i class="fas fa-phone-alt me-1"></i> {{ order.shippingAddress?.phone }}<br>
+            <i class="fas fa-envelope me-1"></i> {{ order.shippingAddress?.email }}
+          </address>
+        </div>
+        
+        <div class="col-md-4">
+          <h5>Billing Information</h5>
+          <address class="mb-0">
+            <strong>{{ order.billingAddress?.name }}</strong><br>
+            {{ order.billingAddress?.street }}<br>
+            {{ order.billingAddress?.city }}, {{ order.billingAddress?.state }} {{ order.billingAddress?.zipCode }}<br>
+            {{ order.billingAddress?.country }}<br>
+            <i class="fas fa-phone-alt me-1"></i> {{ order.billingAddress?.phone }}<br>
+            <i class="fas fa-envelope me-1"></i> {{ order.billingAddress?.email }}
+          </address>
+        </div>
+
+        <div class="col-md-4">
+          <h5>Payment Information</h5>
+          <p class="mb-1">
+            <strong>Method:</strong> {{ order.paymentMethod }}
+          </p>          <!-- Payment card details would be added here when available -->
+          <p class="mb-1" *ngIf="order.notes">
+            <strong>Payment Notes:</strong> {{ order.notes }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Order items -->
+      <h5 class="mb-3">Order Items</h5>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Product</th>
+              <th>Supplier</th>
+              <th class="text-center">Qty</th>
+              <th class="text-end">Price</th>
+              <th class="text-end">Discount</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let line of order.orderLines">
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="product-image me-2">
+                    <img [src]="line.productImage || 'assets/images/placeholder.png'" alt="Product image">
+                  </div>
+                  <div>
+                    <h6 class="mb-0">{{ line.productName }}</h6>
+                    <small class="text-muted">{{ line.productCode }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>{{ line.supplierName }}</td>
+              <td class="text-center">{{ line.quantity }}</td>
+              <td class="text-end">${{ line.pricePerUnit.toFixed(2) }}</td>
+              <td class="text-end text-danger">- ${{ (line.discountAmount || 0).toFixed(2) }}</td>
+              <td class="text-end">${{ ((line.quantity * line.pricePerUnit) - (line.discountAmount || 0)).toFixed(2) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Order summary -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="d-flex flex-column">
+            <div *ngIf="canRateSupplier()">
+              <button class="btn btn-outline-warning mb-2" (click)="rateSupplier()">
+                <i class="fas fa-star me-2"></i> Rate Supplier
+              </button>
+            </div>
+            <button class="btn btn-outline-primary" (click)="reorder()">
+              <i class="fas fa-shopping-cart me-2"></i> Reorder These Items
+            </button>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="order-summary">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Subtotal:</span>
+              <span>${{ getSubtotal().toFixed(2) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 text-danger">
+              <span>Discounts:</span>
+              <span>- ${{ getTotalDiscount().toFixed(2) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Shipping:</span>
+              <span>${{ (order.shippingCost || 0).toFixed(2) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Tax:</span>
+              <span>${{ (order.taxAmount || 0).toFixed(2) }}</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between total">
+              <span>Total:</span>
+              <span>${{ order.totalAmount.toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

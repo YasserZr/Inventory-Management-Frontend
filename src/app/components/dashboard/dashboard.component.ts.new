@@ -1,0 +1,204 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { Product } from '../../models/product';
+import { PurchaseOrder } from '../../models/purchase-order';
+import { Offer } from '../../models/offer';
+
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './dashboard.component.html',
+  styleUrl: './dashboard.component.scss'
+})
+export class DashboardComponent implements OnInit {
+  // Admin/Inventory metrics
+  totalProducts = 0;
+  inStockProducts = 0;
+  lowStockProducts = 0;
+  recentProducts: Product[] = [];
+  
+  // User metrics
+  recentOrders: PurchaseOrder[] = [];
+  featuredOffers: Offer[] = [];
+  
+  // App state
+  currentRole = 'USER'; // For demo purposes (would come from auth service)
+  // Make Math available to template
+  Math = Math;
+  
+  constructor() {}
+  
+  ngOnInit(): void {
+    this.loadMockData();
+  }
+  
+  loadMockData(): void {
+    // For demo purposes, we'll use mock data
+    this.totalProducts = this.mockProducts.length;
+    this.inStockProducts = this.mockProducts.filter(p => (p.stockQuantity ?? 0) > 5).length;
+    this.lowStockProducts = this.mockProducts.filter(p => (p.stockQuantity ?? 0) <= 5 && (p.stockQuantity ?? 0) > 0).length;
+    this.recentProducts = this.mockProducts;
+    this.featuredOffers = this.mockOffers;
+    this.recentOrders = this.mockOrders;
+  }
+  
+  // User role methods
+  isAdmin(): boolean {
+    return this.currentRole === 'ADMIN';
+  }
+  
+  isSupplier(): boolean {
+    return this.currentRole === 'SUPPLIER';
+  }
+  
+  isUser(): boolean {
+    return this.currentRole === 'USER';
+  }
+  
+  // Helper method to calculate discounted price safely
+  getDiscountedPrice(originalPrice: number, offer: Offer): number {
+    if (!offer.discountType || !offer.discountValue) {
+      return originalPrice;
+    }
+    
+    if (offer.discountType === 'PERCENTAGE') {
+      return originalPrice * (1 - offer.discountValue / 100);
+    } else if (offer.discountType === 'FIXED') {
+      return Math.max(0, originalPrice - offer.discountValue);
+    }
+    
+    return originalPrice;
+  }
+  
+  // Mock data for development
+  private mockProducts: Product[] = [
+    {
+      id: 1,
+      name: 'Dell XPS 13',
+      description: 'High-performance laptop with InfinityEdge display',
+      price: 1299.99,
+      stockQuantity: 8,
+      status: 'ACTIVE',
+      category: { categoryId: 1, name: 'Electronics' },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 2,
+      name: 'Apple iPhone 13',
+      description: 'Latest Apple smartphone with advanced camera system',
+      price: 999.99,
+      stockQuantity: 5,
+      status: 'LOW_STOCK',
+      category: { categoryId: 1, name: 'Electronics' },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 3,
+      name: 'Samsung 4K Smart TV',
+      description: '55-inch 4K Ultra HD Smart LED TV',
+      price: 699.99,
+      stockQuantity: 2,
+      status: 'LOW_STOCK',
+      category: { categoryId: 1, name: 'Electronics' },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 4,
+      name: 'Logitech MX Master 3',
+      description: 'Advanced wireless mouse for professionals',
+      price: 99.99,
+      stockQuantity: 15,
+      status: 'ACTIVE',
+      category: { categoryId: 3, name: 'Computer Accessories' },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 5,
+      name: 'HP LaserJet Printer',
+      description: 'High-quality laser printer for office use',
+      price: 349.99,
+      stockQuantity: 0,
+      status: 'OUT_OF_STOCK',
+      category: { categoryId: 2, name: 'Office Equipment' },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
+  
+  private mockOffers: Offer[] = [
+    {
+      offerId: 101,
+      title: 'Summer Sale - Dell XPS',
+      description: '15% off on Dell XPS laptops',
+      status: 'ACTIVE',
+      product: this.mockProducts[0],
+      supplier: { id: 1, firstname: 'Dell', lastname: 'Inc.', email: 'dell@example.com', rating: 4.5 },
+      discountType: 'PERCENTAGE',
+      discountValue: 15,
+      startDate: '2023-06-01',
+      endDate: '2023-07-31'
+    },
+    {
+      offerId: 102,
+      title: 'Flash Deal - Samsung TV',
+      description: '$100 off on all Samsung Smart TVs',
+      status: 'ACTIVE',
+      product: this.mockProducts[2],
+      supplier: { id: 3, firstname: 'Samsung', lastname: 'Electronics', email: 'samsung@example.com', rating: 4.2 },
+      discountType: 'FIXED',
+      discountValue: 100,
+      startDate: '2023-06-15',
+      endDate: '2023-06-20'
+    },
+    {
+      offerId: 103,
+      title: 'Back to School - Accessories Bundle',
+      description: '25% off on computer accessories',
+      status: 'ACTIVE',
+      product: this.mockProducts[3],
+      supplier: { id: 4, firstname: 'Logitech', lastname: 'International', email: 'logitech@example.com', rating: 4.0 },
+      discountType: 'PERCENTAGE',
+      discountValue: 25,
+      startDate: '2023-08-01',
+      endDate: '2023-09-15'
+    }
+  ];
+  
+  private mockOrders: PurchaseOrder[] = [
+    {
+      poId: 1001,
+      status: 'DELIVERED',
+      orderDate: '2023-05-25',
+      deliveryDate: '2023-05-30',
+      totalAmount: 1299.99,
+      paymentStatus: 'PAID',
+      paymentMethod: 'CREDIT_CARD',
+      updatedAt: new Date().toISOString()
+    },
+    {
+      poId: 1002,
+      status: 'PROCESSING',
+      orderDate: '2023-06-02',
+      deliveryDate: '2023-06-09',
+      totalAmount: 449.98,
+      paymentStatus: 'PAID',
+      paymentMethod: 'PAYPAL',
+      updatedAt: new Date().toISOString()
+    },
+    {
+      poId: 1003,
+      status: 'PENDING',
+      orderDate: '2023-06-05',
+      totalAmount: 699.99,
+      paymentStatus: 'PENDING',
+      paymentMethod: 'BANK_TRANSFER',
+      updatedAt: new Date().toISOString()
+    }
+  ];
+}

@@ -1,0 +1,72 @@
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { User } from '../models/user.model';
+import { ApiService } from './api.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UserService {
+  private endpoint = 'api/users';
+
+  constructor(private apiService: ApiService) {}
+
+  /**
+   * Get the current user's profile
+   */
+  getCurrentUserProfile(): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/profile`);
+  }
+
+  /**
+   * Update the current user's profile
+   */
+  updateProfile(userData: Partial<User>): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/profile`, userData);
+  }
+
+  /**
+   * Change the user's password
+   */
+  changePassword(currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/change-password`, {
+      currentPassword,
+      newPassword
+    });
+  }
+
+  /**
+   * Get all users (admin only)
+   */
+  getAllUsers(): Observable<User[]> {
+    return this.http.get<User[]>(this.apiUrl);
+  }
+
+  /**
+   * Get user by ID (admin only)
+   */
+  getUserById(id: number): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * Create a new user (admin only)
+   */
+  createUser(user: Partial<User>): Observable<User> {
+    return this.http.post<User>(this.apiUrl, user);
+  }
+
+  /**
+   * Update a user (admin only)
+   */
+  updateUser(id: number, user: Partial<User>): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/${id}`, user);
+  }
+
+  /**
+   * Delete a user (admin only)
+   */
+  deleteUser(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+}

@@ -1,0 +1,124 @@
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mb-1">Rate Supplier</h1>
+      <p class="text-muted">Share your experience with this supplier</p>
+    </div>
+    <a routerLink="/user/purchase-history" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left me-2"></i> Back to Purchase History
+    </a>
+  </div>
+  
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">Loading supplier details...</p>
+  </div>
+  
+  <!-- Error State -->
+  <div *ngIf="!loading && error && !supplier" class="alert alert-danger">
+    <i class="fas fa-exclamation-circle me-2"></i> {{ error }}
+  </div>
+  
+  <!-- Rating Form -->
+  <div *ngIf="!loading && supplier" class="row">
+    <div class="col-lg-8 mx-auto">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <!-- Supplier Info -->
+          <div class="supplier-info text-center mb-4">
+            <div class="supplier-avatar mb-3">
+              <div class="avatar-placeholder">
+                <i class="fas fa-building"></i>
+              </div>
+            </div>
+            <h4>{{ supplier.firstname }} {{ supplier.lastname }}</h4>
+            <div class="current-rating">
+              <span class="me-2">Current Rating:</span>
+              <span class="stars">                <i *ngFor="let star of [1, 2, 3, 4, 5]" 
+                   class="fas" [ngClass]="getStarClass(star)"
+                ></i>
+              </span>
+              <span class="rating-value ms-2">{{ supplier && supplier.rating !== undefined ? supplier.rating : 'Not rated' }}</span>
+            </div>
+          </div>
+          
+          <!-- Alert Messages -->
+          <div *ngIf="error && supplier" class="alert alert-danger mb-4">
+            <i class="fas fa-exclamation-circle me-2"></i> {{ error }}
+          </div>
+          
+          <div *ngIf="success" class="alert alert-success mb-4">
+            <i class="fas fa-check-circle me-2"></i> {{ success }}
+          </div>
+          
+          <!-- Rating Form -->
+          <form [formGroup]="ratingForm" (ngSubmit)="onSubmit()">
+            <div class="mb-4">
+              <label class="form-label">Your Rating <span class="text-danger">*</span></label>
+              <div class="star-rating">
+                <div class="stars">
+                  <ng-container *ngFor="let star of stars">
+                    <i 
+                      class="fas fa-star star-icon" 
+                      [class.filled]="isStarFilled(star)" 
+                      (click)="setRating(star)"
+                      (mouseenter)="hoverStar(star)"
+                      (mouseleave)="resetHover()"
+                    ></i>
+                  </ng-container>
+                </div>
+                <span class="rating-text">
+                  {{ 
+                    f['rating'].value === 1 ? 'Poor' : 
+                    f['rating'].value === 2 ? 'Fair' : 
+                    f['rating'].value === 3 ? 'Good' : 
+                    f['rating'].value === 4 ? 'Very Good' : 
+                    f['rating'].value === 5 ? 'Excellent' : 'Select a rating'
+                  }}
+                </span>
+              </div>
+              <div *ngIf="submitted && f['rating'].errors" class="invalid-feedback d-block">
+                <div *ngIf="f['rating'].errors['required']">Please select a rating</div>
+                <div *ngIf="f['rating'].errors['min']">Please select a rating</div>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <label for="comment" class="form-label">Your Review (Optional)</label>
+              <textarea 
+                id="comment"
+                class="form-control" 
+                formControlName="comment"
+                rows="5"
+                placeholder="Share your experience with this supplier..."
+              ></textarea>
+              <div *ngIf="submitted && f['comment'].errors" class="invalid-feedback d-block">
+                <div *ngIf="f['comment'].errors['maxlength']">Review must be less than 1000 characters</div>
+              </div>
+              <div class="form-text">
+                <span [ngClass]="{'text-danger': f['comment'].value?.length > 1000}">
+                  {{ f['comment'].value?.length || 0 }}
+                </span>/1000 characters
+              </div>
+            </div>
+            
+            <div class="d-grid gap-2">
+              <button 
+                type="submit" 
+                class="btn btn-primary" 
+                [disabled]="loadingSubmit"
+              >
+                <span *ngIf="loadingSubmit" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                <i *ngIf="!loadingSubmit" class="fas fa-paper-plane me-2"></i>
+                {{ currentRating ? 'Update Rating' : 'Submit Rating' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

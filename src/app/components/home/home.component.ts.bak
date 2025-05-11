@@ -1,0 +1,34 @@
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+
+@Component({
+  selector: 'app-home',
+  standalone: true,
+  template: `<div class="loading-container">Redirecting...</div>`,
+  styles: [`
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-size: 18px;
+      color: #666;
+    }
+  `]
+})
+export class HomeComponent implements OnInit {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    // Check authentication status and redirect accordingly
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/dashboard']);
+    } else {
+      this.router.navigate(['/login']);
+    }
+  }
+}

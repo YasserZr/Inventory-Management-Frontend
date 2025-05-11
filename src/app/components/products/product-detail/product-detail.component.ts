@@ -31,7 +31,7 @@ export class ProductDetailComponent implements OnInit {
         stockQuantity: 15,
         status: 'ACTIVE',
         category: { categoryId: 1, name: 'Electronics' },
-        supplier: { id: 1, firstname: 'Dell', lastname: 'Inc.', email: 'contact@dell.com', role: 'SUPPLIER' },
+        supplier: { id: 1, username: 'dell_supplier', firstname: 'Dell', lastname: 'Inc.', email: 'contact@dell.com', role: 'SUPPLIER' },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };

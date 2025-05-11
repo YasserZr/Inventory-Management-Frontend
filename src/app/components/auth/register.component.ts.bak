@@ -1,0 +1,175 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { RegisterRequest } from '../../models/register-request.model';
+
+@Component({
+  selector: 'app-register',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  template: `
+    <div class="register-container">
+      <div class="card">
+        <div class="card-header">
+          <h2>Register</h2>
+        </div>
+        <div class="card-body">
+          <div *ngIf="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+          </div>
+          <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+            <div class="form-group">
+              <label for="name">Full Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="name"
+                name="name"
+                [(ngModel)]="registerRequest.name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input
+                type="text"
+                class="form-control"
+                id="username"
+                name="username"
+                [(ngModel)]="registerRequest.username"
+                required
+                autocomplete="username"
+              />
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                name="email"
+                [(ngModel)]="registerRequest.email"
+                required
+                autocomplete="email"
+              />
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                name="password"
+                [(ngModel)]="registerRequest.password"
+                required
+                autocomplete="new-password"
+              />
+            </div>
+            <div class="form-group">
+              <label for="role">Role</label>
+              <select
+                class="form-control"
+                id="role"
+                name="role"
+                [(ngModel)]="registerRequest.role"
+                required
+              >
+                <option value="CUSTOMER">Customer</option>
+                <option value="SUPPLIER">Supplier</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!registerForm.form.valid || isLoading"
+            >
+              {{ isLoading ? 'Loading...' : 'Register' }}
+            </button>
+          </form>
+          <div class="login-link">
+            <p>Already have an account? <a routerLink="/login">Login</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .register-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 80vh;
+      padding: 20px 0;
+    }
+    .card {
+      width: 400px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .btn {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn:disabled {
+      background-color: #cccccc;
+    }
+    .login-link {
+      margin-top: 20px;
+      text-align: center;
+    }
+  `]
+})
+export class RegisterComponent {
+  registerRequest: RegisterRequest = {
+    name: '',
+    username: '',
+    email: '',
+    password: '',
+    role: 'CUSTOMER'
+  };
+  isLoading = false;
+  errorMessage = '';
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+  onSubmit() {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.authService.register(this.registerRequest).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        console.log('Registration successful:', response);
+        // Redirect to dashboard after successful registration
+        this.router.navigate(['/dashboard']);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        if (error.status === 0) {
+          this.errorMessage = 'Could not connect to the server. Please check your network connection.';
+        } else if (error.status === 409) {
+          this.errorMessage = 'Username or email already exists. Please use different credentials.';
+        } else {
+          this.errorMessage = error.error?.message || 'Registration failed. Please check your information and try again.';
+        }
+        console.error('Registration error:', error);
+      }
+    });
+  }
+}

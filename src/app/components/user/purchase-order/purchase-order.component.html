@@ -1,0 +1,190 @@
+<div class="container py-4">  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mb-1">Place Order</h1>
+      <p class="text-muted">Complete your purchase order</p>
+    </div>
+    <button class="btn btn-outline-secondary" (click)="returnToOffers()">
+      <i class="fas fa-tags me-2"></i> Back to Offers
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">Preparing your checkout...</p>
+  </div>
+
+  <!-- Checkout Form -->
+  <form *ngIf="!loading" [formGroup]="orderForm" (ngSubmit)="onSubmit()" class="checkout-form">
+    <div class="row">
+      <!-- Left Column: Shipping & Payment -->
+      <div class="col-lg-8">
+        <!-- Shipping Information -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+              <i class="fas fa-truck me-2"></i> Shipping Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="shippingAddress" class="form-label">Shipping Address <span class="text-danger">*</span></label>
+              <textarea 
+                id="shippingAddress" 
+                class="form-control" 
+                formControlName="shippingAddress" 
+                rows="3"
+                placeholder="Enter your complete shipping address"
+                [ngClass]="{'is-invalid': submitted && f['shippingAddress'].errors}"
+              ></textarea>
+              <div *ngIf="submitted && f['shippingAddress'].errors" class="invalid-feedback">
+                <div *ngIf="f['shippingAddress'].errors['required']">Shipping address is required</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Billing Information -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+              <i class="fas fa-file-invoice me-2"></i> Billing Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="sameAsShipping" (change)="copyShippingToBilling()">
+                <label class="form-check-label" for="sameAsShipping">
+                  Same as shipping address
+                </label>
+              </div>
+              
+              <label for="billingAddress" class="form-label">Billing Address <span class="text-danger">*</span></label>
+              <textarea 
+                id="billingAddress" 
+                class="form-control" 
+                formControlName="billingAddress" 
+                rows="3"
+                placeholder="Enter your complete billing address"
+                [ngClass]="{'is-invalid': submitted && f['billingAddress'].errors}"
+              ></textarea>
+              <div *ngIf="submitted && f['billingAddress'].errors" class="invalid-feedback">
+                <div *ngIf="f['billingAddress'].errors['required']">Billing address is required</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+              <i class="fas fa-credit-card me-2"></i> Payment Method
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="paymentMethod" class="form-label">Select Payment Method <span class="text-danger">*</span></label>
+              <select 
+                id="paymentMethod" 
+                class="form-select" 
+                formControlName="paymentMethod"
+                [ngClass]="{'is-invalid': submitted && f['paymentMethod'].errors}"
+              >
+                <option *ngFor="let option of paymentMethodOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+              <div *ngIf="submitted && f['paymentMethod'].errors" class="invalid-feedback">
+                <div *ngIf="f['paymentMethod'].errors['required']">Payment method is required</div>
+              </div>
+            </div>
+            
+            <!-- Payment details would vary by payment method, omitted for simplicity -->
+            
+          </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+              <i class="fas fa-info-circle me-2"></i> Additional Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="notes" class="form-label">Order Notes (Optional)</label>
+              <textarea 
+                id="notes" 
+                class="form-control" 
+                formControlName="notes" 
+                rows="3"
+                placeholder="Any special instructions for delivery or handling?"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column: Order Summary -->
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4 sticky-top" style="top: 1rem;">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+              <i class="fas fa-shopping-basket me-2"></i> Order Summary
+            </h5>
+          </div>
+          <div class="card-body">
+            <!-- Order Items Summary -->
+            <div class="mb-3">              <div class="d-flex justify-content-between mb-2">
+                <span>Items ({{ orderItems.length }})</span>
+                <a href="javascript:void(0)" (click)="returnToOffers()" class="text-decoration-none">Edit</a>
+              </div>
+              
+              <div class="order-items">
+                <div *ngFor="let item of orderItems" class="order-item mb-2">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <span class="fw-medium">{{ item.product.name }}</span>
+                      <small class="d-block text-muted">Qty: {{ item.quantity }}</small>
+                    </div>
+                    <span>${{ item.price * item.quantity | number:'1.2-2' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <hr>
+            
+            <!-- Order Totals -->
+            <div class="mb-4">
+              <div class="d-flex justify-content-between mb-2">
+                <span>Subtotal</span>
+                <span>${{ calculateTotal() | number:'1.2-2' }}</span>
+              </div>
+              
+              <div class="d-flex justify-content-between mb-2">
+                <span>Shipping</span>
+                <span class="text-success">Free</span>
+              </div>
+              
+              <div class="d-flex justify-content-between fw-bold mt-3">
+                <span>Total</span>
+                <span>${{ calculateTotal() | number:'1.2-2' }}</span>
+              </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-lg w-100">
+              <i class="fas fa-lock me-2"></i> Place Order
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

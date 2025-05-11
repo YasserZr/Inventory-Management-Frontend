@@ -1,6 +1,7 @@
 import { Component, OnInit, ErrorHandler, Injectable } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
+import { GlobalLoadingComponent } from './components/shared/global-loading/global-loading.component';
 
 @Injectable()
 export class GlobalErrorHandler implements ErrorHandler {
@@ -12,7 +13,7 @@ export class GlobalErrorHandler implements ErrorHandler {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent],
+  imports: [RouterOutlet, NavbarComponent, GlobalLoadingComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   providers: [

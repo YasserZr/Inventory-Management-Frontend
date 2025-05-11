@@ -1,0 +1,126 @@
+// Purchase order details styles
+.container {
+  max-width: 1200px;
+}
+
+.card {
+  border-radius: 8px;
+  border: none;
+}
+
+// Status badge styles
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-pending {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #ff9800;
+}
+
+.status-processing {
+  background-color: rgba(33, 150, 243, 0.15);
+  color: #2196f3;
+}
+
+.status-shipped {
+  background-color: rgba(156, 39, 176, 0.15);
+  color: #9c27b0;
+}
+
+.status-delivered {
+  background-color: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+
+.status-cancelled {
+  background-color: rgba(244, 67, 54, 0.15);
+  color: #f44336;
+}
+
+// Product image
+.product-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+// Order summary box
+.order-summary {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 6px;
+  margin-left: auto;
+  max-width: 400px;
+
+  .total {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+}
+
+address {
+  line-height: 1.6;
+}
+
+// Responsive styles
+@media (max-width: 767px) {
+  .order-summary {
+    margin: 1.5rem 0 0;
+    max-width: 100%;
+  }
+}
+
+// Animation for loading
+@keyframes spinner {
+  to {transform: rotate(360deg);}
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+// Button styles
+.btn-outline-warning {
+  color: #ff9800;
+  border-color: #ff9800;
+  
+  &:hover {
+    background-color: #ff9800;
+    color: white;
+  }
+}
+
+.btn-outline-primary {
+  &:hover {
+    color: white;
+  }
+}
+
+// Table styles
+.table {
+  vertical-align: middle;
+  
+  thead {
+    background-color: #f8f9fa;
+    
+    th {
+      border-bottom-width: 1px;
+      font-weight: 600;
+    }
+  }
+}

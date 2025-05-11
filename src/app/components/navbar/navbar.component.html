@@ -1,7 +1,7 @@
-<nav class="navbar navbar-expand-lg shadow-sm">
+﻿<nav class="navbar navbar-expand-lg shadow-sm">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center" routerLink="/">
-      <i class="fas fa-boxes text-primary me-2"></i>
+      <i class="bi bi-box-seam text-primary me-2"></i>
       <span class="brand-text">BuyNGo Inventory</span>
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
@@ -10,48 +10,65 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
-            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/products" routerLinkActive="active">
-            <i class="fas fa-box me-1"></i> Products
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/sales-orders" routerLinkActive="active">
-            <i class="fas fa-file-invoice-dollar me-1"></i> Sales Orders
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/suppliers" routerLinkActive="active">
-            <i class="fas fa-truck me-1"></i> Suppliers
-          </a>
-        </li>        <li class="nav-item">
-          <a class="nav-link" routerLink="/offers" routerLinkActive="active">
-            <i class="fas fa-tag me-1"></i> Offers
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/reporting" routerLinkActive="active">
-            <i class="fas fa-chart-line me-1"></i> Reports
-          </a>
-        </li>
+        <!-- Only show navigation items when authenticated -->
+        <ng-container *ngIf="authService.isAuthenticated()">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
+              <i class="bi bi-speedometer2 me-1"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/products" routerLinkActive="active">
+              <i class="bi bi-box me-1"></i> Products
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/sales-orders" routerLinkActive="active">
+              <i class="bi bi-receipt me-1"></i> Sales Orders
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/suppliers" routerLinkActive="active">
+              <i class="bi bi-truck me-1"></i> Suppliers
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/offers" routerLinkActive="active">
+              <i class="bi bi-tag me-1"></i> Offers
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/reporting" routerLinkActive="active">
+              <i class="bi bi-graph-up me-1"></i> Reports
+            </a>
+          </li>
+        </ng-container>
       </ul>
       <div class="d-flex align-items-center">
-        <div class="dropdown">
-          <a class="btn btn-outline-primary dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-user-circle me-1"></i> Admin
+        <!-- Show login/register when not authenticated -->
+        <ng-container *ngIf="!authService.isAuthenticated(); else authenticatedUser">
+          <a class="btn btn-sm btn-outline-primary me-2" routerLink="/login">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Login
           </a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i> Profile</a></li>
-            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Settings</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
-          </ul>
-        </div>
+          <a class="btn btn-sm btn-outline-secondary" routerLink="/register">
+            <i class="bi bi-person-plus me-1"></i> Register
+          </a>
+        </ng-container>
+        
+        <!-- Show user menu when authenticated -->
+        <ng-template #authenticatedUser>
+          <div class="dropdown">
+            <a class="btn btn-outline-primary dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-person-circle me-1"></i> User
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" routerLink="/profile"><i class="bi bi-person-gear me-2"></i> Profile</a></li>
+              <li><a class="dropdown-item" routerLink="/order-history"><i class="bi bi-clock-history me-2"></i> Order History</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" (click)="logout()" style="cursor: pointer;"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+            </ul>
+          </div>
+        </ng-template>
       </div>
     </div>
   </div>

@@ -1,0 +1,117 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+import { AuthResponse } from '../models/auth-response.model';
+import { LoginRequest } from '../models/login-request.model';
+import { RegisterRequest } from '../models/register-request.model';
+import { Router } from '@angular/router';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private apiUrl = `${environment.apiUrl}/api/auth`;
+  private tokenKey = 'auth_token';
+  private userKey = 'auth_user';
+  private authStatusSubject = new BehaviorSubject<boolean>(this.hasValidToken());
+  
+  // Observable that components can subscribe to for auth status changes
+  public authStatus$ = this.authStatusSubject.asObservable();
+  
+  constructor(
+    private http: HttpClient,
+    private router: Router
+  ) {
+    // Check token validity on service initialization
+    this.checkTokenValidity();
+  }
+  
+  login(request: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request)
+      .pipe(
+        tap(response => {
+          this.storeAuthData(response);
+          this.authStatusSubject.next(true);
+        })
+      );
+  }
+  
+  register(request: RegisterRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request)
+      .pipe(
+        tap(response => {
+          this.storeAuthData(response);
+          this.authStatusSubject.next(true);
+        })
+      );
+  }
+  
+  logout(): void {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.userKey);
+    this.authStatusSubject.next(false);
+    this.router.navigate(['/login']);
+  }
+  
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+  
+  getCurrentUser(): any {
+    const userJson = localStorage.getItem(this.userKey);
+    return userJson ? JSON.parse(userJson) : null;
+  }
+  
+  private storeAuthData(response: AuthResponse): void {
+    localStorage.setItem(this.tokenKey, response.token);
+    
+    // Store user info without the token
+    const { token, ...userData } = response;
+    localStorage.setItem(this.userKey, JSON.stringify(userData));
+  }
+  
+  isAuthenticated(): boolean {
+    return this.hasValidToken();
+  }
+  
+  private hasValidToken(): boolean {
+    const token = this.getToken();
+    if (!token) return false;
+    
+    // Check if token is expired
+    try {
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) return false;
+      
+      const payload = JSON.parse(atob(tokenParts[1]));
+      const expiry = payload.exp * 1000; // Convert to milliseconds
+      
+      return expiry > Date.now();
+    } catch (e) {
+      console.error('Error parsing JWT token:', e);
+      return false;
+    }
+  }
+    private checkTokenValidity(): void {
+    const isAuthenticated = this.hasValidToken();
+    this.authStatusSubject.next(isAuthenticated);
+    
+    // If token exists but is invalid, log the user out
+    if (!isAuthenticated && this.getToken()) {
+      this.logout();
+    }
+  }
+  
+  // Method to refresh the token before it expires
+  refreshToken(): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh-token`, {})
+      .pipe(
+        tap(response => {
+          this.storeAuthData(response);
+          this.authStatusSubject.next(true);
+        })
+      );
+  }
+}

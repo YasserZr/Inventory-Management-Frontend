@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Product } from '../../models/product.model';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,7 +16,9 @@ export class DashboardComponent implements OnInit {
   inStockProducts = 0;
   lowStockProducts = 0;
   recentProducts: Product[] = [];
-
+  currentUser: any = null;
+  constructor(private authService: AuthService) {}
+  
   // Temporary mock data for demonstration
   mockProducts: Product[] = [
     {
@@ -60,16 +63,19 @@ export class DashboardComponent implements OnInit {
     }
   ];
 
-  constructor() {}
-
   ngOnInit(): void {
+    // Get current user information
+    this.currentUser = this.authService.getCurrentUser();
+    
     // In a real application, these would come from a service
     this.loadDashboardData();
   }
 
   loadDashboardData(): void {
     // Mock data - in a real application, this would be API calls
-    this.recentProducts = this.mockProducts;
+    this.recentProducts = this.mockProducts
+      .sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime())
+      .slice(0, 5);
     this.totalProducts = this.mockProducts.length;
     this.inStockProducts = this.mockProducts.filter(p => p.stockQuantity && p.stockQuantity > 5).length;
     this.lowStockProducts = this.mockProducts.filter(p => p.stockQuantity !== undefined && 

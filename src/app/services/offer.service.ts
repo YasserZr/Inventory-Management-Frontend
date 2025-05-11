@@ -2,13 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Offer } from '../models/offer';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OfferService {
-  // Using a direct URL instead of environment for development
-  private apiUrl = 'http://localhost:8080/api/offers';
+  private apiUrl = `${environment.apiUrl}/api/offers`;
 
   constructor(private http: HttpClient) {}
 

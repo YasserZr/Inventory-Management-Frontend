@@ -1,0 +1,26 @@
+import { ServerRoute, RenderMode } from '@angular/ssr';
+
+/**
+ * Server-side route configuration for Angular SSR
+ * This determines which routes are rendered dynamically vs pre-rendered
+ */
+export const serverRoutes: ServerRoute[] = [
+  // Routes with parameters should use dynamic rendering instead of prerender
+  { path: 'products/:id', renderMode: RenderMode.dynamic },
+  { path: 'products/:id/edit', renderMode: RenderMode.dynamic },
+  { path: 'sales-orders/:id', renderMode: RenderMode.dynamic },
+  { path: 'sales-orders/:id/edit', renderMode: RenderMode.dynamic },
+  { path: 'suppliers/:id', renderMode: RenderMode.dynamic },
+  { path: 'suppliers/:id/edit', renderMode: RenderMode.dynamic },
+  { path: 'offers/:id', renderMode: RenderMode.dynamic },
+  { path: 'offers/:id/edit', renderMode: RenderMode.dynamic },
+  { path: 'user/purchase-order/:id', renderMode: RenderMode.dynamic },
+  { path: 'user/order-confirmation/:id', renderMode: RenderMode.dynamic },
+  { path: 'user/rate-supplier/:id', renderMode: RenderMode.dynamic },
+  
+  // All other routes can be prerendered
+  {
+    path: '**',
+    renderMode: RenderMode.prerender
+  }
+];

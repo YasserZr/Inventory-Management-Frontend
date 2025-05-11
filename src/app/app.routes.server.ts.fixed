@@ -1,0 +1,28 @@
+import { ServerRoute, RenderMode } from '@angular/ssr';
+
+// Define render mode constants to avoid direct string usage
+const RenderModes = {
+  dynamic: 'dynamic' as unknown as RenderMode,
+  prerender: 'prerender' as unknown as RenderMode
+};
+
+export const serverRoutes: ServerRoute[] = [
+  // Routes with parameters should use dynamic rendering instead of prerender
+  { path: 'products/:id', renderMode: RenderModes.dynamic },
+  { path: 'products/:id/edit', renderMode: RenderModes.dynamic },
+  { path: 'sales-orders/:id', renderMode: RenderModes.dynamic },
+  { path: 'sales-orders/:id/edit', renderMode: RenderModes.dynamic },
+  { path: 'suppliers/:id', renderMode: RenderModes.dynamic },
+  { path: 'suppliers/:id/edit', renderMode: RenderModes.dynamic },
+  { path: 'offers/:id', renderMode: RenderModes.dynamic },
+  { path: 'offers/:id/edit', renderMode: RenderModes.dynamic },
+  { path: 'user/purchase-order/:id', renderMode: RenderModes.dynamic },
+  { path: 'user/order-confirmation/:id', renderMode: RenderModes.dynamic },
+  { path: 'user/rate-supplier/:id', renderMode: RenderModes.dynamic },
+  
+  // All other routes can be prerendered
+  {
+    path: '**',
+    renderMode: RenderModes.prerender
+  }
+];

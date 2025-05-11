@@ -1,0 +1,125 @@
+.container {
+  max-width: 1000px;
+}
+
+.confirmation-container {
+  padding: 1rem;
+}
+
+.success-icon {
+  font-size: 5rem;
+  color: #4caf50;
+  animation: pulse 2s ease-in-out;
+}
+
+.error-icon {
+  font-size: 5rem;
+  color: #f44336;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.order-info, .order-summary {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.card {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 1rem;
+  font-weight: 600;
+}
+
+.table {
+  margin-bottom: 0;
+  
+  thead th {
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+  }
+  
+  tfoot {
+    font-size: 0.95rem;
+    
+    tr:last-child {
+      font-size: 1.1rem;
+      color: #1565c0;
+    }
+  }
+}
+
+.badge {
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+}
+
+.next-steps {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+// Button styling
+.btn {
+  padding: 0.5rem 1.5rem;
+  border-radius: 50px;
+  
+  &.btn-primary {
+    background-color: #1565c0;
+    border-color: #1565c0;
+    
+    &:hover {
+      background-color: #0d47a1;
+      border-color: #0d47a1;
+    }
+  }
+  
+  &.btn-outline-primary {
+    color: #1565c0;
+    border-color: #1565c0;
+    
+    &:hover {
+      background-color: #1565c0;
+      color: white;
+    }
+  }
+}
+
+// Loading spinner
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+  color: #1565c0;
+}
+
+// Responsive adjustments
+@media (max-width: 767px) {
+  .next-steps {
+    .btn {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    
+    .d-flex {
+      flex-direction: column;
+    }
+  }
+}
