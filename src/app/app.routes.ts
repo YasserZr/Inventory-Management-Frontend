@@ -28,14 +28,13 @@ export const routes: Routes = [
   { path: 'unauthorized', component: UnauthorizedComponent },
   
   // User routes
-  { path: 'profile', component: UserProfileComponent, canActivate: [authGuard] },
-  // Protected routes (authentication required)
+  { path: 'profile', component: UserProfileComponent, canActivate: [authGuard] },  // Protected routes (authentication required)
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },  // Product routes - Accessible by all authenticated users
   { path: 'products', component: ProductListComponent, canActivate: [authGuard] },
-  { path: 'products/:id', component: ProductDetailComponent, canActivate: [authGuard] },
   // Product management - Admin only
   { path: 'products/new', component: ProductFormComponent, canActivate: [roleGuard(['ADMIN'])] },
   { path: 'products/:id/edit', component: ProductFormComponent, canActivate: [roleGuard(['ADMIN'])] },
+  { path: 'products/:id', component: ProductDetailComponent, canActivate: [authGuard] },
   
   // Sales Order routes - USER and ADMIN roles
   { path: 'sales-orders', component: SalesOrderListComponent, canActivate: [roleGuard(['USER', 'ADMIN'])] },

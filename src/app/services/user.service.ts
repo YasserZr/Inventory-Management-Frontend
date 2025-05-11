@@ -57,6 +57,13 @@ export class UserService {
   }
 
   /**
+   * Get users by role
+   */
+  getUsersByRole(role: string): Observable<User[]> {
+    return this.apiService.get<User[]>(`${this.endpoint}/role/${role}`);
+  }
+
+  /**
    * Search users by name
    */
   searchUsers(query: string): Observable<User[]> {

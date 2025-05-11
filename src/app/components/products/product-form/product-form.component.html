@@ -132,9 +132,7 @@
                 </option>
               </select>
               <small class="form-text text-muted">Group this product by category</small>
-            </div>
-            
-            <!-- Supplier Selection -->
+            </div>            <!-- Supplier Selection -->
             <div>
               <label for="supplier" class="form-label">Supplier</label>
               <select id="supplier" class="form-select" formControlName="supplierId">
@@ -143,7 +141,22 @@
                   {{ supplier.firstname }} {{ supplier.lastname }}
                 </option>
               </select>
-              <small class="form-text text-muted">Select product supplier</small>
+              <small class="form-text text-muted">Select product supplier (users with SUPPLIER role)</small>
+              
+              <!-- Show selected supplier details when a supplier is selected -->
+              <div *ngIf="productForm.get('supplierId')?.value" class="mt-2 p-2 border rounded bg-light">
+                <div *ngFor="let supplier of suppliers">
+                  <div *ngIf="supplier.id == productForm.get('supplierId')?.value">
+                    <div class="fw-bold">{{ supplier.firstname }} {{ supplier.lastname }}</div>
+                    <div class="small text-muted" *ngIf="supplier.companyEmail || supplier.email">
+                      <i class="fas fa-envelope me-1"></i> {{ supplier.companyEmail || supplier.email }}
+                    </div>
+                    <div class="small text-muted" *ngIf="supplier.companyContactNumber || supplier.phoneNumber">
+                      <i class="fas fa-phone me-1"></i> {{ supplier.companyContactNumber || supplier.phoneNumber }}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

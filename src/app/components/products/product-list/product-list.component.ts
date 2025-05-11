@@ -7,6 +7,8 @@ import { ProductService } from '../../../services/product.service';
 import { CategoryService } from '../../../services/category.service';
 import { Category } from '../../../models/category.model';
 import { finalize } from 'rxjs/operators';
+import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
+import { forkJoin } from 'rxjs';
 
 interface ProductWithSelection extends Product {
   selected?: boolean;
@@ -30,7 +32,8 @@ export class ProductListComponent implements OnInit {
 
   constructor(
     private productService: ProductService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private confirmDialog: ConfirmDialogService
   ) { }
 
   ngOnInit(): void {
@@ -198,18 +201,24 @@ export class ProductListComponent implements OnInit {
   }
 
   deleteProduct(id: number): void {
-    if (confirm('Are you sure you want to delete this product?')) {
-      this.productService.deleteProduct(id.toString()).subscribe({
-        next: () => {
-          this.products = this.products.filter(product => product.id !== id);
-          this.applyFilter(); // Re-apply the filter to update the view
-        },
-        error: (error) => {
-          console.error('Error deleting product:', error);
-          alert('Failed to delete product. Please try again.');
-        }
-      });
-    }
+    this.confirmDialog.confirm({
+      title: 'Delete Product',
+      message: 'Are you sure you want to delete this product? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      confirmCallback: () => {
+        this.productService.deleteProduct(id.toString()).subscribe({
+          next: () => {
+            this.products = this.products.filter(product => product.id !== id);
+            this.applyFilter(); // Re-apply the filter to update the view
+          },
+          error: (error) => {
+            console.error('Error deleting product:', error);
+            alert('Failed to delete product. Please try again.');
+          }
+        });
+      }
+    });
   }
 
   getStatusBadgeClass(status: string): string {
@@ -237,24 +246,33 @@ export class ProductListComponent implements OnInit {
   deleteSelected(): void {
     if (!this.hasSelectedProducts()) return;
     
-    if (confirm('Are you sure you want to delete all selected products?')) {
-      const selectedIds = this.filteredProducts
-        .filter(product => product.selected)
-        .map(product => product.id);
-      
-      // Create an array of deletion observables
-      const deleteObservables = selectedIds.map(id => 
-        this.productService.deleteProduct(id!.toString())
-      );
-      
-      // In a real implementation, you might want to use forkJoin or similar
-      // to handle multiple deletion requests
-      Promise.all(deleteObservables.map(obs => 
-        obs.toPromise().catch(err => console.error('Error deleting product:', err))
-      )).then(() => {
-        this.products = this.products.filter(product => !selectedIds.includes(product.id));
-        this.applyFilter(); // Re-apply the filter to update the view
-      });
-    }
+    const selectedProducts = this.filteredProducts.filter(product => product.selected);
+    const count = selectedProducts.length;
+    
+    this.confirmDialog.confirm({
+      title: 'Delete Selected Products',
+      message: `Are you sure you want to delete ${count} selected product${count > 1 ? 's' : ''}? This action cannot be undone.`,
+      confirmText: 'Delete All',
+      cancelText: 'Cancel',
+      confirmCallback: () => {
+        const selectedIds = selectedProducts.map(product => product.id);
+        
+        // Use forkJoin to handle multiple deletion requests
+        const deleteObservables = selectedIds.map(id => 
+          this.productService.deleteProduct(id!.toString())
+        );
+        
+        forkJoin(deleteObservables).subscribe({
+          next: () => {
+            this.products = this.products.filter(product => !selectedIds.includes(product.id));
+            this.applyFilter(); // Re-apply the filter to update the view
+          },
+          error: (error) => {
+            console.error('Error deleting products:', error);
+            alert('Failed to delete some or all products. Please try again.');
+          }
+        });
+      }
+    });
   }
 }

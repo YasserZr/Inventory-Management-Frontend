@@ -74,11 +74,21 @@
                     <div class="spec-label">Category</div>
                     <div class="spec-value">{{ product.category?.name || 'Uncategorized' }}</div>
                   </div>
-                </div>
-                <div class="col-md-6 mb-3">
+                </div>                <div class="col-md-6 mb-3">
                   <div class="spec-item">
                     <div class="spec-label">Supplier</div>
-                    <div class="spec-value">{{ product.supplier?.firstname }} {{ product.supplier?.lastname || 'Not specified' }}</div>
+                    <div class="spec-value" *ngIf="product.supplier">
+                      <div class="supplier-name fw-bold">{{ product.supplier.firstname }} {{ product.supplier.lastname }}</div>
+                      <div class="supplier-contact small text-muted" *ngIf="product.supplier.companyEmail">
+                        <i class="fas fa-envelope me-1"></i> {{ product.supplier.companyEmail || product.supplier.email }}
+                      </div>
+                      <div class="supplier-contact small text-muted" *ngIf="product.supplier.companyContactNumber">
+                        <i class="fas fa-phone me-1"></i> {{ product.supplier.companyContactNumber }}
+                      </div>
+                    </div>
+                    <div class="spec-value" *ngIf="!product.supplier">
+                      <span class="text-muted">Not specified</span>
+                    </div>
                   </div>
                 </div>
                 <div class="col-md-6 mb-3">
