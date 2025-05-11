@@ -21,10 +21,10 @@
     </div>
     <p class="mt-2 text-muted">Loading product details...</p>
   </div>
-
   <!-- Error State -->
   <div *ngIf="!loading && !product" class="alert alert-danger">
-    <i class="fas fa-exclamation-triangle me-2"></i> Product not found or has been removed.
+    <i class="fas fa-exclamation-triangle me-2"></i> 
+    {{ error || 'Product not found or has been removed.' }}
     <a [routerLink]="['/products']" class="alert-link ms-2">Return to product list</a>
   </div>
 
@@ -37,13 +37,10 @@
           <div class="product-header mb-4">
             <div class="d-flex justify-content-between align-items-start">
               <div>
-                <h2 class="product-name">{{ product.name }}</h2>
-                <div class="mt-2">
-                  <span class="badge rounded-pill" [ngClass]="{
-                    'bg-success': product.status === 'ACTIVE',
-                    'bg-warning text-dark': product.status === 'LOW_STOCK',
-                    'bg-danger': product.status === 'OUT_OF_STOCK'
-                  }">{{ product.status }}</span>
+                <h2 class="product-name">{{ product.name }}</h2>                <div class="mt-2">
+                  <span class="badge rounded-pill" [ngClass]="getStatusBadgeClass(product.status || '')">
+                    {{ getStatusLabel(product.status || '') }}
+                  </span>
                   
                   <span class="ms-2 badge rounded-pill bg-secondary">
                     ID: {{ product.id }}

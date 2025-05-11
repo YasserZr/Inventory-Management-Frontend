@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { PurchaseOrder } from '../../../models/purchase-order';
+import { PurchaseOrder } from '../../../models/purchase-order.model';
+import { SalesOrderService } from '../../../services/sales-order.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-sales-order-list',
@@ -16,12 +18,39 @@ export class SalesOrderListComponent implements OnInit {
   filteredOrders: PurchaseOrder[] = [];
   searchTerm: string = '';
   statusFilter: string = 'ALL';
+  loading: boolean = false;
+  error: string | null = null;
   
-  constructor() { }
+  constructor(private salesOrderService: SalesOrderService) { }
 
   ngOnInit(): void {
-    // Mock data - would be replaced with API call
-    this.salesOrders = [
+    this.loadOrders();
+  }
+
+  loadOrders(): void {
+    this.loading = true;
+    this.error = null;
+    
+    this.salesOrderService.getOrders()
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (data) => {
+          this.salesOrders = data;
+          this.applyFilters();
+        },
+        error: (err) => {
+          console.error('Failed to load orders:', err);
+          this.error = 'Failed to load orders. Please try again.';
+          // Fallback to mock data in case of error (for development)
+          this.salesOrders = this.getMockOrders();
+          this.applyFilters();
+        }
+      });
+  }
+
+  // Mock data for development/testing purposes
+  getMockOrders(): PurchaseOrder[] {
+    return [
       {
         poId: 1,
         status: 'PROCESSING',
@@ -87,52 +116,86 @@ export class SalesOrderListComponent implements OnInit {
         supplier: { id: 4, firstname: 'Sony', lastname: 'Interactive', email: 'supplier@sony.com' }
       }
     ];
-    this.filterOrders();
-  }
-
-  filterOrders(): void {
-    this.filteredOrders = this.salesOrders.filter(order => {
-      const matchesSearch = this.searchTerm.trim() === '' || 
-        order.poId?.toString().includes(this.searchTerm) ||
-        order.orderedBy?.firstname?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        order.orderedBy?.lastname?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        order.supplier?.firstname?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        order.totalAmount?.toString().includes(this.searchTerm);
-      
-      const matchesStatus = this.statusFilter === 'ALL' || order.status === this.statusFilter;
-      
-      return matchesSearch && matchesStatus;
-    });
   }
 
   onSearchChange(): void {
-    this.filterOrders();
+    this.applyFilters();
   }
 
   onStatusFilterChange(): void {
-    this.filterOrders();
+    this.applyFilters();
+  }
+
+  applyFilters(): void {
+    let filtered = [...this.salesOrders];
+
+    // Apply status filter if not ALL
+    if (this.statusFilter !== 'ALL') {
+      filtered = filtered.filter(order => order.status === this.statusFilter);
+    }
+
+    // Apply search term if exists
+    if (this.searchTerm.trim()) {
+      const search = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(order => 
+        order.poId?.toString().includes(search) ||
+        order.orderedBy?.firstname?.toLowerCase().includes(search) ||
+        order.orderedBy?.lastname?.toLowerCase().includes(search) ||
+        order.supplier?.firstname?.toLowerCase().includes(search) ||
+        order.supplier?.lastname?.toLowerCase().includes(search)
+      );
+    }
+
+    this.filteredOrders = filtered;
+  }
+
+  getStatusLabel(status: string | undefined): string {
+    if (!status) return 'Unknown';
+    return this.salesOrderService.getStatusLabel(status);
   }
 
   getStatusClass(status: string | undefined): string {
     if (!status) return 'bg-secondary';
     
-    switch(status) {
-      case 'PROCESSING': return 'bg-info';
-      case 'DELIVERED': return 'bg-success';
-      case 'PENDING': return 'bg-warning';
-      case 'CANCELLED': return 'bg-danger';
-      default: return 'bg-secondary';
-    }
+    const statusClasses: { [key: string]: string } = {
+      'PENDING': 'bg-warning text-dark',
+      'PROCESSING': 'bg-info',
+      'SHIPPED': 'bg-primary',
+      'DELIVERED': 'bg-success',
+      'CANCELLED': 'bg-danger'
+    };
+    return statusClasses[status] || 'bg-secondary';
+  }
+
+  getPaymentStatusLabel(status: string | undefined): string {
+    if (!status) return 'Unknown';
+    return this.salesOrderService.getPaymentStatusLabel(status);
   }
 
   getPaymentStatusClass(status: string | undefined): string {
-    if (!status) return 'text-secondary';
+    if (!status) return 'bg-secondary';
     
-    switch(status) {
-      case 'PAID': return 'text-success';
-      case 'PENDING': return 'text-warning';
-      case 'REFUNDED': return 'text-danger';
-      default: return 'text-secondary';
+    const statusClasses: { [key: string]: string } = {
+      'PENDING': 'bg-warning text-dark',
+      'PAID': 'bg-success',
+      'REFUNDED': 'bg-info',
+      'FAILED': 'bg-danger'
+    };
+    return statusClasses[status] || 'bg-secondary';
+  }
+
+  deleteOrder(id: number): void {
+    if (confirm('Are you sure you want to delete this order?')) {
+      this.salesOrderService.deleteOrder(id.toString()).subscribe({
+        next: () => {
+          this.salesOrders = this.salesOrders.filter(order => order.poId !== id);
+          this.applyFilters();
+        },
+        error: (err) => {
+          console.error('Failed to delete order:', err);
+          alert('Failed to delete the order. Please try again.');
+        }
+      });
     }
   }
 }

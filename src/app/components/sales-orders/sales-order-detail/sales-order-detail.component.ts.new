@@ -1,3 +1,4 @@
+// filepath: c:\Workspace_Coding\Workspace_Springboot\BuyNGo\inventory-management-frontend\src\app\components\sales-orders\sales-order-detail\sales-order-detail.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -5,6 +6,7 @@ import { PurchaseOrder } from '../../../models/purchase-order.model';
 import { PurchaseOrderLine } from '../../../models/purchase-order-line.model';
 import { SalesOrderService } from '../../../services/sales-order.service';
 import { finalize } from 'rxjs/operators';
+import { Product } from '../../../models/product.model';
 
 // Create extended interface for template access
 interface DisplayPurchaseOrderLine extends PurchaseOrderLine {
@@ -130,6 +132,7 @@ export class SalesOrderDetailComponent implements OnInit {
         role: 'SUPPLIER', 
         username: 'dell_supplier' 
       },
+      // The lines will be passed through convertPurchaseOrderLines which will fix any type inconsistencies
       purchaseOrderLines: [
         {
           id: 101,

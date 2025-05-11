@@ -2,11 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Offer } from '../../../models/offer';
+import { Offer } from '../../../models/offer.model';
 import { OfferService } from '../../../services/offer.service';
-import { Product } from '../../../models/product';
-import { User } from '../../../models/user';
+import { Product } from '../../../models/product.model';
+import { User } from '../../../models/user.model';
 import { HttpClientModule } from '@angular/common/http';
+import { ProductService } from '../../../services/product.service';
+import { SupplierService } from '../../../services/supplier.service';
+import { finalize, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-offer-form',
@@ -22,18 +25,8 @@ export class OfferFormComponent implements OnInit {
   loading = true;
   submitted = false;
   
-  // Mock data (in real app would come from API)
-  products: Product[] = [
-    { id: 1, name: 'Dell XPS 13', price: 1299 },
-    { id: 2, name: 'MacBook Pro', price: 1799 },
-    { id: 3, name: 'HP Spectre', price: 1199 }
-  ];
-  
-  suppliers: User[] = [
-    { id: 1, username: 'dell_supplier', firstname: 'Dell', lastname: 'Inc' },
-    { id: 2, username: 'apple_supplier', firstname: 'Apple', lastname: 'Inc' },
-    { id: 3, username: 'hp_supplier', firstname: 'HP', lastname: 'Inc' }
-  ];
+  products: Product[] = [];
+  suppliers: User[] = [];
   
   discountTypes = [
     { value: 'PERCENTAGE', label: 'Percentage' },
@@ -51,23 +44,66 @@ export class OfferFormComponent implements OnInit {
     private formBuilder: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private offerService: OfferService
+    private offerService: OfferService,
+    private productService: ProductService,
+    private supplierService: SupplierService
   ) {}
 
   ngOnInit(): void {
     this.initForm();
+    this.loadInitialData();
+  }
+  
+  loadInitialData(): void {
+    this.loading = true;
     
-    // Check if in edit mode
-    this.route.paramMap.subscribe(params => {
-      this.offerId = params.get('id');
-      
-      if (this.offerId) {
-        this.isEditMode = true;
-        this.loadOfferDetails(this.offerId);
-      } else {
-        this.loading = false;
+    // Load products and suppliers simultaneously
+    forkJoin({
+      products: this.productService.getAllProducts(),
+      suppliers: this.supplierService.getSuppliers()
+    })
+    .pipe(finalize(() => {
+      // Check if in edit mode
+      this.route.paramMap.subscribe(params => {
+        this.offerId = params.get('id');
+        
+        if (this.offerId) {
+          this.isEditMode = true;
+          this.loadOfferDetails(this.offerId);
+        } else {
+          this.loading = false;
+        }
+      });
+    }))
+    .subscribe({
+      next: (result) => {
+        this.products = result.products;
+        this.suppliers = result.suppliers;
+      },
+      error: (error) => {
+        console.error('Error loading data:', error);
+        // Fallback to mock data
+        this.products = this.getMockProducts();
+        this.suppliers = this.getMockSuppliers();
       }
     });
+  }
+  
+  // Mock data for development/testing purposes
+  getMockProducts(): Product[] {
+    return [
+      { id: 1, name: 'Dell XPS 13', price: 1299 },
+      { id: 2, name: 'MacBook Pro', price: 1799 },
+      { id: 3, name: 'HP Spectre', price: 1199 }
+    ];
+  }
+  
+  getMockSuppliers(): User[] {
+    return [
+      { id: 1, username: 'dell_supplier', firstname: 'Dell', lastname: 'Inc', email: 'supplier@dell.com', role: 'SUPPLIER' },
+      { id: 2, username: 'apple_supplier', firstname: 'Apple', lastname: 'Inc', email: 'supplier@apple.com', role: 'SUPPLIER' },
+      { id: 3, username: 'hp_supplier', firstname: 'HP', lastname: 'Inc', email: 'supplier@hp.com', role: 'SUPPLIER' }
+    ];
   }
   
   // Init form with validation

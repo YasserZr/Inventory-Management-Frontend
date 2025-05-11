@@ -29,15 +29,14 @@ export const roleGuard = (allowedRoles: string[]) => {
       });
       return false;
     }
-    
-    const user = authService.getCurrentUser();
+      const user = authService.getCurrentUser();
     
     if (!user) {
       router.navigate(['/login']);
       return false;
     }
     
-    if (allowedRoles.includes(user.role)) {
+    if (user.role && allowedRoles.includes(user.role)) {
       return true;
     }
     

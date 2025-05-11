@@ -2,9 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 import { Product } from '../../../models/product.model';
 import { Category } from '../../../models/category.model';
 import { User } from '../../../models/user.model';
+import { ProductService } from '../../../services/product.service';
+import { CategoryService } from '../../../services/category.service';
+import { SupplierService } from '../../../services/supplier.service';
 
 @Component({
   selector: 'app-product-form',
@@ -22,61 +26,21 @@ export class ProductFormComponent implements OnInit {
   productId?: number;
   categories: Category[] = [];
   suppliers: User[] = [];
-  // Mock data for demonstration
-  mockProducts: Product[] = [
-    {
-      id: 1,
-      name: 'Laptop Dell XPS 13',
-      description: 'High-performance laptop with InfinityEdge display',
-      price: 1299.99,
-      stockQuantity: 15,
-      status: 'ACTIVE',
-      category: { categoryId: 1, name: 'Electronics' },
-      supplier: { id: 1, username: 'dell_supplier', firstname: 'Dell', lastname: 'Inc.', email: 'supplier@dell.com', role: 'SUPPLIER' },
-      createdAt: '2025-04-15T10:30:00',
-      updatedAt: '2025-05-01T14:22:00'
-    },
-    {
-      id: 2,
-      name: 'iPhone 15 Pro',
-      description: 'Latest Apple smartphone with advanced camera system',
-      price: 999.99,
-      stockQuantity: 8,
-      status: 'ACTIVE',
-      category: { categoryId: 1, name: 'Electronics' },
-      supplier: { id: 2, username: 'apple_supplier', firstname: 'Apple', lastname: 'Inc.', email: 'supplier@apple.com', role: 'SUPPLIER' },
-      createdAt: '2025-04-18T09:15:00',
-      updatedAt: '2025-05-02T11:45:00'
-    }
-  ];
-
-  mockCategories: Category[] = [
-    { categoryId: 1, name: 'Electronics' },
-    { categoryId: 2, name: 'Footwear' },
-    { categoryId: 3, name: 'Clothing' },
-    { categoryId: 4, name: 'Home & Kitchen' },
-    { categoryId: 5, name: 'Books' }
-  ];
-  mockSuppliers: User[] = [
-    { id: 1, username: 'dell_supplier', firstname: 'Dell', lastname: 'Inc.', email: 'supplier@dell.com', role: 'SUPPLIER' },
-    { id: 2, username: 'apple_supplier', firstname: 'Apple', lastname: 'Inc.', email: 'supplier@apple.com', role: 'SUPPLIER' },
-    { id: 3, username: 'samsung_supplier', firstname: 'Samsung', lastname: 'Electronics', email: 'supplier@samsung.com', role: 'SUPPLIER' },
-    { id: 4, username: 'sony_supplier', firstname: 'Sony', lastname: 'Interactive', email: 'supplier@sony.com', role: 'SUPPLIER' },
-    { id: 5, username: 'nike_supplier', firstname: 'Nike', lastname: 'Inc.', email: 'supplier@nike.com', role: 'SUPPLIER' }
-  ];
+  error: string | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private productService: ProductService,
+    private categoryService: CategoryService,
+    private supplierService: SupplierService
   ) { }
 
   ngOnInit(): void {
     this.initForm();
-    
-    // Get categories and suppliers
-    this.categories = this.mockCategories;
-    this.suppliers = this.mockSuppliers;
+    this.loadCategories();
+    this.loadSuppliers();
     
     // Check if edit mode
     this.route.paramMap.subscribe(params => {
@@ -108,28 +72,81 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
+  loadCategories(): void {
+    this.categoryService.getAllCategories().subscribe({
+      next: (data) => {
+        this.categories = data;
+      },
+      error: (error) => {
+        console.error('Error loading categories:', error);
+        this.error = 'Failed to load categories. Please try again.';
+        // You might want to add fallback mock data for development
+        this.categories = this.getMockCategories();
+      }
+    });
+  }
+
+  loadSuppliers(): void {
+    this.supplierService.getSuppliers().subscribe({
+      next: (data) => {
+        this.suppliers = data;
+      },
+      error: (error) => {
+        console.error('Error loading suppliers:', error);
+        this.error = 'Failed to load suppliers. Please try again.';
+        // You might want to add fallback mock data for development
+        this.suppliers = this.getMockSuppliers();
+      }
+    });
+  }
+
   loadProduct(id: number) {
     this.loading = true;
     
-    // Simulate API call
-    setTimeout(() => {
-      const product = this.mockProducts.find(p => p.id === id);
-      
-      if (product) {
-        // Set form values
-        this.productForm.patchValue({
-          name: product.name,
-          description: product.description,
-          price: product.price,
-          stockQuantity: product.stockQuantity,
-          status: product.status,
-          categoryId: product.category?.categoryId,
-          supplierId: product.supplier?.id
-        });
-      }
-      
-      this.loading = false;
-    }, 1000);
+    this.productService.getProduct(id.toString())
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (product) => {
+          if (product) {
+            // Set form values
+            this.productForm.patchValue({
+              name: product.name,
+              description: product.description,
+              price: product.price,
+              stockQuantity: product.stockQuantity,
+              status: product.status,
+              categoryId: product.category?.categoryId,
+              supplierId: product.supplier?.id
+            });
+          }
+        },
+        error: (error) => {
+          console.error('Error loading product:', error);
+          this.error = 'Failed to load product details. Please try again.';
+        }
+      });
+  }
+
+  // Mock data for development/fallback
+  getMockCategories(): Category[] {
+    return [
+      { categoryId: 1, name: 'Electronics' },
+      { categoryId: 2, name: 'Footwear' },
+      { categoryId: 3, name: 'Clothing' },
+      { categoryId: 4, name: 'Home & Kitchen' },
+      { categoryId: 5, name: 'Books' }
+    ];
+  }
+
+  // Mock data for development/fallback
+  getMockSuppliers(): User[] {
+    return [
+      { id: 1, username: 'dell_supplier', firstname: 'Dell', lastname: 'Inc.', email: 'supplier@dell.com', role: 'SUPPLIER' },
+      { id: 2, username: 'apple_supplier', firstname: 'Apple', lastname: 'Inc.', email: 'supplier@apple.com', role: 'SUPPLIER' },
+      { id: 3, username: 'samsung_supplier', firstname: 'Samsung', lastname: 'Electronics', email: 'supplier@samsung.com', role: 'SUPPLIER' },
+      { id: 4, username: 'sony_supplier', firstname: 'Sony', lastname: 'Interactive', email: 'supplier@sony.com', role: 'SUPPLIER' },
+      { id: 5, username: 'nike_supplier', firstname: 'Nike', lastname: 'Inc.', email: 'supplier@nike.com', role: 'SUPPLIER' }
+    ];
   }
 
   onSubmit() {
@@ -141,34 +158,52 @@ export class ProductFormComponent implements OnInit {
     }
 
     this.submitting = true;
+    this.error = null;
 
     // Prepare product data
-    const productData = {
-      ...this.productForm.value,
-      id: this.isEditMode ? this.productId : undefined
+    const formValues = this.productForm.value;
+    
+    // Create product object
+    const productData: Product = {
+      id: this.isEditMode ? this.productId : undefined,
+      name: formValues.name,
+      description: formValues.description,
+      price: formValues.price,
+      stockQuantity: formValues.stockQuantity,
+      status: formValues.status,
     };
 
-    // Convert IDs to objects
-    if (productData.categoryId) {
-      productData.category = this.categories.find(c => c.categoryId === +productData.categoryId);
-      delete productData.categoryId;
+    // Add category and supplier if selected
+    if (formValues.categoryId) {
+      const category = this.categories.find(c => c.categoryId === +formValues.categoryId);
+      if (category) {
+        productData.category = category;
+      }
     }
     
-    if (productData.supplierId) {
-      productData.supplier = this.suppliers.find(s => s.id === +productData.supplierId);
-      delete productData.supplierId;
+    if (formValues.supplierId) {
+      const supplier = this.suppliers.find(s => s.id === +formValues.supplierId);
+      if (supplier) {
+        productData.supplier = supplier;
+      }
     }
 
-    console.log('Product data:', productData);
+    // Call the appropriate service method based on whether it's an edit or create
+    const request = this.isEditMode 
+      ? this.productService.updateProduct(this.productId!.toString(), productData)
+      : this.productService.createProduct(productData);
 
-    // Simulate API call
-    setTimeout(() => {
-      // In a real app, would call service to save to API
-      this.submitting = false;
-      
-      // Navigate back to products
-      this.router.navigate(['/products']);
-    }, 1500);
+    request.pipe(finalize(() => this.submitting = false))
+      .subscribe({
+        next: () => {
+          // Navigate back to products on success
+          this.router.navigate(['/products']);
+        },
+        error: (error) => {
+          console.error('Error saving product:', error);
+          this.error = 'Failed to save product. Please try again.';
+        }
+      });
   }
 
   cancel() {

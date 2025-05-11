@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { User } from '../../../models/user';
+import { User } from '../../../models/user.model';
 import { SupplierService } from '../../../services/supplier.service';
 import { HttpClientModule } from '@angular/common/http';
 

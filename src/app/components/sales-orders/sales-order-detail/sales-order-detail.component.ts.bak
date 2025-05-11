@@ -5,6 +5,7 @@ import { PurchaseOrder } from '../../../models/purchase-order.model';
 import { PurchaseOrderLine } from '../../../models/purchase-order-line.model';
 import { SalesOrderService } from '../../../services/sales-order.service';
 import { finalize } from 'rxjs/operators';
+import { Product } from '../../../models/product.model';
 
 // Create extended interface for template access
 interface DisplayPurchaseOrderLine extends PurchaseOrderLine {
@@ -63,9 +64,7 @@ export class SalesOrderDetailComponent implements OnInit {
           this.orderLines = this.mapOrderLines(mockOrder.purchaseOrderLines || []);
         }
       });
-  }
-  
-  // Helper method to map order lines for display
+  }    // Helper method to map order lines for display
   mapOrderLines(lines: any[]): DisplayPurchaseOrderLine[] {
     return lines.map(line => {
       const productName = line.product?.name || 'Unknown Product';
@@ -96,6 +95,8 @@ export class SalesOrderDetailComponent implements OnInit {
         unitPrice,
         totalPrice
       };
+    });
+  }
     });
   }
   
@@ -130,6 +131,7 @@ export class SalesOrderDetailComponent implements OnInit {
         role: 'SUPPLIER', 
         username: 'dell_supplier' 
       },
+      // The lines will be passed through convertPurchaseOrderLines which will fix any type inconsistencies
       purchaseOrderLines: [
         {
           id: 101,

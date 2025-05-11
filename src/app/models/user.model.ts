@@ -1,10 +1,10 @@
-import { PurchaseOrder } from './purchase-order';
-import { Offer } from './offer';
+import { PurchaseOrder } from './purchase-order.model';
+import { Offer } from './offer.model';
 
 export interface User {
     id?: number;
-    username: string;
-    email: string;
+    username?: string; // Changed to optional to be consistent with user.ts
+    email?: string;
     password?: string; // Note: Password should generally not be sent to the frontend
     firstname?: string;
     lastname?: string;
@@ -14,7 +14,7 @@ export interface User {
     workAddress?: string;
     companyContactNumber?: string;
     companyEmail?: string;
-    role: string;
+    role?: string; // Changed to optional to be consistent with user.ts
     rating?: number;
     serviceQuality?: string;
     createdAt?: string; // LocalDateTime maps to string in ISO format

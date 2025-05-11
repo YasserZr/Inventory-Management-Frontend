@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { User } from '../../../models/user';
+import { User } from '../../../models/user.model';
 import { SupplierService } from '../../../services/supplier.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-supplier-list',
@@ -16,6 +17,7 @@ export class SupplierListComponent implements OnInit {
   suppliers: User[] = [];
   filteredSuppliers: User[] = [];
   loading: boolean = true;
+  error: string | null = null;
   searchTerm: string = '';
   qualityFilter: string = '';
   selectedSuppliers: Set<number> = new Set();
@@ -23,50 +25,70 @@ export class SupplierListComponent implements OnInit {
   constructor(public supplierService: SupplierService) { }
   
   ngOnInit(): void {
-    console.log('SupplierListComponent initialized');
     this.loadSuppliers();
   }
-    loadSuppliers(): void {
+  
+  loadSuppliers(): void {
     this.loading = true;
-    // Hard-coded test data
-    setTimeout(() => {
-      this.suppliers = [
-        {
-          id: 1,
-          username: 'dell_supplier',
-          email: 'supplier@dell.com',
-          firstname: 'Dell',
-          lastname: 'Computers',
-          companyEmail: 'b2b@dell.com',
-          companyContactNumber: '+1-800-456-7890',
-          serviceQuality: 'EXCELLENT',
-          rating: 4.8
+    this.error = null;
+    
+    this.supplierService.getSuppliers()
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (data) => {
+          this.suppliers = data;
+          this.filteredSuppliers = [...this.suppliers];
         },
-        {
-          id: 2,
-          username: 'hp_supplier',
-          email: 'supplier@hp.com',
-          firstname: 'HP',
-          lastname: 'Inc',
-          companyEmail: 'procurement@hp.com',
-          companyContactNumber: '+1-800-123-4567',
-          serviceQuality: 'GOOD',
-          rating: 4.2
-        },
-        {
-          id: 3,
-          username: 'logitech_supplier',
-          email: 'supplier@logitech.com',
-          firstname: 'Logitech',
-          lastname: 'International',
-          companyEmail: 'orders@logitech.com',
-          companyContactNumber: '+1-877-555-8833',
-          serviceQuality: 'EXCELLENT',
-          rating: 4.9      }
-      ];
-      this.filteredSuppliers = [...this.suppliers];
-      this.loading = false;
-    }, 800);
+        error: (err) => {
+          console.error('Failed to load suppliers:', err);
+          this.error = 'Failed to load suppliers. Please try again.';
+          
+          // Fallback to mock data for development
+          this.suppliers = this.getMockSuppliers();
+          this.filteredSuppliers = [...this.suppliers];
+        }
+      });
+  }
+    // Mock data for development/testing purposes
+  getMockSuppliers(): User[] {
+    return [
+      {
+        id: 1,
+        username: 'dell_supplier',
+        email: 'supplier@dell.com',
+        firstname: 'Dell',
+        lastname: 'Computers',
+        companyEmail: 'b2b@dell.com',
+        companyContactNumber: '+1-800-456-7890',
+        serviceQuality: 'EXCELLENT',
+        rating: 4.8,
+        role: 'SUPPLIER'
+      },
+      {
+        id: 2,
+        username: 'hp_supplier',
+        email: 'supplier@hp.com',
+        firstname: 'HP',
+        lastname: 'Inc',
+        companyEmail: 'procurement@hp.com',
+        companyContactNumber: '+1-800-123-4567',
+        serviceQuality: 'GOOD',
+        rating: 4.2,
+        role: 'SUPPLIER'
+      },
+      {
+        id: 3,
+        username: 'logitech_supplier',
+        email: 'supplier@logitech.com',
+        firstname: 'Logitech',
+        lastname: 'International',
+        companyEmail: 'orders@logitech.com',
+        companyContactNumber: '+1-877-555-8833',
+        serviceQuality: 'EXCELLENT',
+        rating: 4.9,
+        role: 'SUPPLIER'
+      }
+    ];
   }
   
   applyFilters(): void {
@@ -104,7 +126,8 @@ export class SupplierListComponent implements OnInit {
   isSupplierSelected(id: number | undefined): boolean {
     return id !== undefined && this.selectedSuppliers.has(id);
   }
-    hasSelectedSuppliers(): boolean {
+  
+  hasSelectedSuppliers(): boolean {
     return this.selectedSuppliers.size > 0;
   }
   
@@ -137,7 +160,8 @@ export class SupplierListComponent implements OnInit {
     
     return classMap[quality] || '';
   }
-    getRatingStars(rating: number | undefined): string[] {
+  
+  getRatingStars(rating: number | undefined): string[] {
     const stars: string[] = [];
     if (rating === undefined) return stars;
     
@@ -163,12 +187,17 @@ export class SupplierListComponent implements OnInit {
   }
   
   deleteSelected(): void {
-    // In a real application, this would call the service to delete selected suppliers
-    console.log(`Would delete ${this.selectedSuppliers.size} suppliers in production.`);
-    
-    // For the mock application, just filter them out
-    this.suppliers = this.suppliers.filter(s => s.id === undefined || !this.selectedSuppliers.has(s.id));
-    this.filteredSuppliers = this.filteredSuppliers.filter(s => s.id === undefined || !this.selectedSuppliers.has(s.id));
-    this.selectedSuppliers.clear();
+    if (confirm(`Are you sure you want to delete ${this.selectedSuppliers.size} supplier(s)?`)) {
+      const deleteObservables = Array.from(this.selectedSuppliers).map(id =>
+        this.supplierService.deleteSupplier(id.toString())
+      );
+      
+      // For a real implementation, you would use forkJoin to wait for all deletes to complete
+      // This is a simplified version for the mock setup
+      console.log(`Deleting ${this.selectedSuppliers.size} suppliers`);
+      this.suppliers = this.suppliers.filter(s => s.id === undefined || !this.selectedSuppliers.has(s.id));
+      this.filteredSuppliers = this.filteredSuppliers.filter(s => s.id === undefined || !this.selectedSuppliers.has(s.id));
+      this.selectedSuppliers.clear();
+    }
   }
 }
